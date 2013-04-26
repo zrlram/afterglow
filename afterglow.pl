@@ -165,6 +165,7 @@
 #           -x "#222222" wasn't working on command line
 #        Adding xlabels for graphviz output (in config file:) - This is now true by default
 #           xlabels = true
+#        Fixing a bug where the target name is printed twice (Thanks Mark Schloesser for reporting)
 #    
 ##############################################################
 
@@ -1335,7 +1336,7 @@ foreach $targetName (keys %targetMap) {
     } else {
 
         if ($xlabels) { $ll = "xlabel=\"$target\""; } else { $ll = "label=\"$target\""; }
-        my $out = "$targetName [fillcolor=$targetColor, $ll";
+        my $out = " [fillcolor=$targetColor, $ll";
 
         # size of node
         if (defined(@targetSizeExp)) { 

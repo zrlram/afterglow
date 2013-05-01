@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Copyright (c) 2011 by Raffael Marty and Chrisitan Beedgen
+# Copyright (c) 2013 by Raffael Marty and Christian Beedgen
 # 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -166,6 +166,8 @@
 #        Adding xlabels for graphviz output (in config file:) - This is now true by default
 #           xlabels = true
 #        Fixing a bug where the target name is printed twice (Thanks Mark Schloesser for reporting)
+#	     Fixing import path for Text::CSV to be local
+# 	     Fixing copyright. Sorry Christian!
 #    
 ##############################################################
 
@@ -173,8 +175,12 @@
 # Main program.
 # ------------------------------------------------------------
 
+# include the lib directory right here for Text::CSV
+use FindBin qw($Bin);
+use lib "$FindBin::Bin/.";
+
 # Program version
-my $version = "1.6.2";
+my $version = "1.6.3";
 
 use Text::CSV;
 my $csvline = Text::CSV->new();
@@ -2093,7 +2099,7 @@ sub init() {
     # Maximum node size
     $maxNodeSize = $opt{m} if $opt{m};
 
-    # Print node count?
+    # GDF output mode
     $gdf = 1 if $opt{k};
 
     if ($opt{q}) {

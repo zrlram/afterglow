@@ -958,9 +958,9 @@ if ($twonodes) {
                 if (defined($color)) { $edge_output .= "color=$color, style=$edgeStyle";}
                 if (defined($color) && $size>0) { $edge_output .= ","; }
                 if ($size>0) { $edge_output .= "penwidth=$size"; }
-                $edge_output .= "];";
+                $edge_output .= "]";
             }
-            $edge_output .= ";\n";
+            $edge_output .= "\n";
         }
 
         $printNode{$sourceName}=1;

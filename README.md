@@ -4,12 +4,16 @@ AfterGlow
 Change Log
 ----------
 
-10/25/12     Version 1.6.3 - Minor edits
+04/30/13     Version 1.6.3 - Minor edits - Removal of additional scripts
+             - This version is the first one not to bundle the sample data, perl scripts, and log analysis scripts anymore
+               Find them on github at: http://github.com/zrlram/parsers and
+                                       https://github.com/zrlram/loganalysis
              - Fixed issue with color names
              - Added xlabels by default. This way, labels are displayed outside of the node itself, not
                inside anymore. You can turn this off by using
                  xlabels = 0
                in the configuration file.
+             - Fixing output bug where target printed twice
 10/16/11     Version 1.6.2 - GDF support
              - Removed afterglow-lgl.pl finally. Sorry, but I don't think anyone is using LGL anymore 
                anyways. Get it from CVS if you need it.

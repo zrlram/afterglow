@@ -1879,7 +1879,7 @@ sub propertyfile() {
             $gdf = 1;
         }
         elsif ($name eq "xlabels") {
-            $xlabels = 1;
+            eval {$xlabels = $value;};
         }
         elsif ($name eq "color") {
             # generic coloring

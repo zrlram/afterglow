@@ -964,13 +964,24 @@ if ($twonodes) {
                 $edge_output .= ",\n";
 
             }
+
             $edge_output .= "\t\t{";
+
+            if ($color){
+                my $rgbcolor = rgb($color);
+                $edge_output .= "\t\t\t\t\"color\" : \"$rgbcolor\",\n";
+            }
+
+            if ($size){ 
+                $edge_output .= "\t\t\t\t\"size\" : \"$size\",\n";
+            }
+            
+            $sourceTargetLinkName =~ tr/"\""//d;
             $edge_output .= "
-                \t\t\"weight\": 1,
-                \t\t\"_id\": \"$sourceName$targetName\",
+                \t\t\"_id\": \"$sourceTargetLinkName\",
                 \t\t\"_type\": \"edge\",
-                \t\t\"_outV\": \"$sourceName\",
-                \t\t\"_inV\": \"$targetName\"";
+                \t\t\"_outV\": $sourceName,
+                \t\t\"_inV\": $targetName";
 
             $edge_output .= "\n\t\t}";
 
@@ -1053,12 +1064,21 @@ if ($twonodes) {
 
             }
             $edge_output .= "\t\t{";
+
+            if ($color){
+                my $rgbcolor = rgb($color);
+                $edge_output .= "\t\t\t\t\"color\" : \"$rgbcolor\",\n";
+            }
+
+            if ($size){ 
+                $edge_output .= "\t\t\t\t\"size\" : \"$size\",\n";
+            }
+            $sourceEventLinkName =~ tr/"\""//d;
             $edge_output .= "
-                \t\"weight\": 1,
-                \t\"_id\": \"$sourceName$eventName\",
+                \t\"_id\": \"$sourceEventLinkName\",
                 \t\"_type\": \"edge\",
-                \t\"_outV\": \"$sourceName\",
-                \t\"_inV\": \"$eventName\"";
+                \t\"_outV\": $sourceName,
+                \t\"_inV\": $eventName";
             $edge_output .= "\n\t\t}";
         }else {
             $edge_output .= "$sourceName -> $eventName";
@@ -1132,12 +1152,21 @@ if ($twonodes) {
 
             }
             $edge_output .= "\t\t{";
+
+            if ($color){
+                my $rgbcolor = rgb($color);
+                $edge_output .= "\t\t\t\t\"color\" : \"$rgbcolor\",\n";
+            }
+
+            if ($size){ 
+                $edge_output .= "\t\t\t\t\"size\" : \"$size\",\n";
+            }
+            $eventTargetLinkName =~ tr/"\""//d;
             $edge_output .= "
-                \t\"weight\": 1,
-                \t\"_id\": \"$sourceName$eventName\",
+                \t\"_id\": \"$eventTargetLinkName\",
                 \t\"_type\": \"edge\",
-                \t\"_outV\": \"$eventName\",
-                \t\"_inV\": \"$targetName\"";
+                \t\"_outV\": $eventName,
+                \t\"_inV\": $targetName";
 
             $edge_output .= "\n\t\t}";
 
@@ -1257,8 +1286,20 @@ foreach $sourceName (keys %sourceMap) {
                 $is_first_node = 0;
             }
             $out .= "\t\t{\n";
-            $out .= "\t\t\t\"weight\": 1,
-                \t\"_id\": \"$source\",
+
+            if ($sourceColor){
+                my $rgbcolor = rgb($sourceColor);
+                $out .= "\t\t\t\"color\" : \"$rgbcolor\",\n";
+            }
+
+            my $size=1;
+            if (defined(@sourceSizeExp)) {
+                $size = sprintf ("%.2f",($maxNodeSize / $maxActualSourceNodeSize) * $sourceNodeSize{$sourceName});
+            }
+            $out .= "\t\t\t\"size\" : \"$size\",\n";
+            $out .= "\t\t\t\"shape\" : \"$shapeSource\",\n";
+           
+            $out .= "\t\t\t\"_id\": \"$source\",
                 \t\"_type\": \"vertex\",
                 \t\"_label\": \"$source\"";
 
@@ -1289,10 +1330,6 @@ foreach $sourceName (keys %sourceMap) {
     }
 
 
-}
-
-if ($outputFormat == 2){
-    print "\n\t],\n";
 }
 
 # Write properties for the event nodes.
@@ -1354,7 +1391,34 @@ unless ($twonodes) {
             print ",".rgb($eventColor)."\n";
 
         } elsif($outputFormat == 2){
+            my $out = "";
+            if (!$is_first_node){
+                $out .= ",\n";
+            } else{
+                $out .= "\n";
+                $is_first_node = 0;
+            }
+            $out .= "\t\t{\n";
 
+            if ($eventColor){
+                my $rgbcolor = rgb($eventColor);
+                $out .= "\t\t\t\"color\" : \"$rgbcolor\",\n";
+            }
+
+            my $size=1;
+            if (defined(@eventSizeExp)) {
+                $size = sprintf ("%.2f",($maxNodeSize / $maxActualEventNodeSize) * $eventNodeSize{$eventName});
+            }
+            $out .= "\t\t\t\"size\" : \"$size\",\n";
+            $out .= "\t\t\t\"shape\" : \"$shapeEvent\",\n";
+            
+            $out .= "\t\t\t\"_id\": \"$event\",
+                \t\"_type\": \"vertex\",
+                \t\"_label\": \"$event\"";
+
+            $out .= "\n\t\t}";
+
+            print $out;
         }else {
 
             if ($xlabels) { $ll = "xlabel=\"$event\""; } else { $ll = "label=\"$event\""; }
@@ -1427,7 +1491,34 @@ foreach $targetName (keys %targetMap) {
         print ",".rgb($sourceColor)."\n";
 
     } elsif ($outputFormat == 2){
+            my $out = "";
+            if (!$is_first_node){
+                $out .= ",\n";
+            } else{
+                $out .= "\n";
+                $is_first_node = 0;
+            }
+            $out .= "\t\t{\n";
 
+            if ($targetColor){
+                my $rgbcolor = rgb($targetColor);
+                $out .= "\t\t\t\"color\" : \"$rgbcolor\",\n";
+            }
+
+            my $size=1;
+            if (defined(@targetSizeExp)) {
+                $size = sprintf ("%.2f",($maxNodeSize / $maxActualTargetNodeSize) * $targetNodeSize{$targetName});
+            }
+            $out .= "\t\t\t\"size\" : \"$size\",\n";
+            $out .= "\t\t\t\"shape\" : \"$shapeTarget\",\n";
+            
+            $out .= "\t\t\t\"_id\": \"$target\",
+                \t\"_type\": \"vertex\",
+                \t\"_label\": \"$target\"";
+
+            $out .= "\n\t\t}";
+
+            print $out;
     }else {
 
         if ($xlabels) { $ll = "xlabel=\"$target\""; } else { $ll = "label=\"$target\""; }
@@ -1459,13 +1550,13 @@ my $is_first_edge = 1;
 if ($outputFormat == 1) {
     print "edgedef>node1 VARCHAR,node2 VARCHAR,directed BOOLEAN,color VARCHAR,weight DOUBLE\n";
 } elsif ($outputFormat == 2){
-    print "\t\"edges\" : [\n";
+    print "\n\t],\n\t\"edges\" : [\n";
 }
 
 print $edge_output;
 
 if ($outputFormat == 2){
-    print "\n\t]\n}\n";
+    print "\n\t\t]\n\t}\n}";
 }
 
 # Write dot footer.

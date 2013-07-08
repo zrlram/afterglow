@@ -1,17 +1,17 @@
 #!/usr/bin/perl
 #
 # Copyright (c) 2013 by Raffael Marty and Christian Beedgen
-# 
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-#  
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -19,29 +19,29 @@
 # Written by:    Christian Beedgen (krist@digitalresearch.org)
 #                Raffael Marty (ram@cryptojail.net)
 #
-# Version:    1.6.3
+# Version:    1.6.4
 #
 # URL:        http://afterglow.sourceforge.net
 #
 # Sample Usage:
-#         tcpdump -vttttnnelr /home/ram/defcon.07.31.10.14.tcpdump.1 | 
-#         ./tcpdump2csv.pl "sip dip ttl" | ../graph/afterglow.pl 
+#         tcpdump -vttttnnelr /home/ram/defcon.07.31.10.14.tcpdump.1 |
+#         ./tcpdump2csv.pl "sip dip ttl" | ../graph/afterglow.pl
 #         -c /home/ram/color.defcon.properties -p 2 | neato -Tgif -o test.gif
-# 
+#
 # Okay, simpler:
 #         cat file.csv | perl afterglow.pl | neato -Tgif -o test.gif
 #
-# ChangeLog:    
+# ChangeLog:
 #
-# 1.1        Adding option to omit node labels    
+# 1.1        Adding option to omit node labels
 # 1.1.1        Adding option to color nodes
 # 1.1.2        Adding option to make nodes invisible
 # 1.1.3        Adding option to eliminate one to one edges (omit threshold)
 # 1.1.4        Adding option to show node counts
 # 1.1.5        Adding option to color edges
 # 1.1.6        Fixing node counts for non-common event nodes
-# 1.2        Refining labels: Instead of just setting them globally, allow for 
-#         setting them per node type. Also if no label is applied, the node 
+# 1.2        Refining labels: Instead of just setting them globally, allow for
+#         setting them per node type. Also if no label is applied, the node
 #         should be smaller
 #         Making event nodes smaller by default
 # 1.3        Adding capability to define colors independant
@@ -62,7 +62,7 @@
 #        Indicating line number where error occured in property file
 #        Adding "exit" property file entry to stop processing
 #        Fixing property file parsing to be more flexible (bug in regex: s to \s)
-#        Fixing annoyance with "no color assigned" errors, assign default colors 
+#        Fixing annoyance with "no color assigned" errors, assign default colors
 #        if not explicitely set in property file.
 # 1.5.1        Making parsing of property file a bit more flexible
 #        Adding subnet() function
@@ -79,9 +79,9 @@
 # 1.5.2        There was a bug for the event fan out threshold which would cause
 #         that the source nodes would not be drawn with the -g option!
 # 1.5.3        There was a bug when you use -p 1 and -f 1. The source nodes
-#         are eliminated for clusters that should not show, but the rest of the 
+#         are eliminated for clusters that should not show, but the rest of the
 #         nodes were still drawn!
-# 1.5.4        New configuration option: variable. Code in this assignment will be 
+# 1.5.4        New configuration option: variable. Code in this assignment will be
 #         executed in the beginning and can be used to boot-strap variables
 # 1.5.5        The invisible color check needs to be after clustering!
 # 1.5.6        Fixing bug that match() would not work in the color assignment
@@ -92,13 +92,13 @@
 #        color. A new property in the properties file:
 #            color.sourcetarget=...
 #        This was something I had planned before and Neil Desai pushed me a bit to
-#        finally get it done. 
-#        Neil Desai contributed a couple of lines of code to use Text::CSV to do 
+#        finally get it done.
+#        Neil Desai contributed a couple of lines of code to use Text::CSV to do
 #            safe CSV parsing. Thanks!
 # 1.5.8        Allowing size on nodes to be configured!
 #             size.[source|target|event]=<perl returning integer>
 #        Option to define the maximum node size on command line (-m <value>)
-#            maxnodesize=<value> also defines the maximum node size, but in 
+#            maxnodesize=<value> also defines the maximum node size, but in
 #        the property file. See README for more information on sizing.
 #        Define whether AfterGlow should automatically sum nodes or not.
 #            sum.[source|target|event]=[0|1];
@@ -115,7 +115,7 @@
 #            Along the way I changed the semantics a bit:
 #            - source color wins over target color for sourc/target nodes,
 #              if the source/target color is not set!
-#            - "color" wins over source and target color for source/target nodes, if 
+#            - "color" wins over source and target color for source/target nodes, if
 #              the source/target color is not set!
 #        I did some research around edge sizes. Sorry, graphviz does not support it.
 #        Label color was never implemented. Fixed
@@ -124,9 +124,9 @@
 #        Added new heuristic to determine color. A catch-all assignment will not be considered
 #        if there was a more specific assignment that was possible. See README for more details.
 # 1.5.9        Adding property to add a URL element to nodes. See sample.properties for an example.
-#        Adding label property to change labels on nodes. This overwrites the old 
+#        Adding label property to change labels on nodes. This overwrites the old
 #            label.(source|event|target) to use not only boolean values.
-#            If you are using [0|1] it turns labels on or off. Otherwise it uses the 
+#            If you are using [0|1] it turns labels on or off. Otherwise it uses the
 #            expression as the label
 #        New is also that you can define "label" which defines the label for all the nodes
 # 1.6.0  If you had quote around the shape value, it would not recignize it. Fixed.
@@ -137,7 +137,7 @@
 #            The default edge size is 1
 #        Another fix for the "not a color:" error. Only scream if a color as actually set
 #        New command line functions:
-#            -q      : Quiet mode. Suppress all output. Attention! 
+#            -q      : Quiet mode. Suppress all output. Attention!
 #            -i file : Read input from a file, instead of from STDIN
 #            -w file : Write output to a file, instead of to STDOUT
 #        Adding new get_severity function for configs to color based on a severity:
@@ -157,10 +157,10 @@
 #        Fixing some variable names. Size should really be fanout. Nicer code.
 #        Changed the order that edges and nodes are output. Because of the GDF format, we first
 #        process the edges and then output the nodes and then after hat output the edges. DOT does
-#        not care about the oder, but GDF does, so we change the output sequence. We cannot 
+#        not care about the oder, but GDF does, so we change the output sequence. We cannot
 #        reorder the code for nodes and egdes as the nodes depend on variables that are computed
 #        by the edges, so we cache the data
-# 1.6.3  Fixing a couple of issues. 
+# 1.6.3  Fixing a couple of issues.
 #           color.source="#222222" wasn't working
 #           -x "#222222" wasn't working on command line
 #        Adding xlabels for graphviz output (in config file:) - This is now true by default
@@ -168,7 +168,13 @@
 #        Fixing a bug where the target name is printed twice (Thanks Mark Schloesser for reporting)
 #	     Fixing import path for Text::CSV to be local
 # 	     Fixing copyright. Sorry Christian!
-#    
+#
+# 1.6.4 Adding support of GraphSON output:
+#           graphson = true
+#       Or:
+#           -j on commandline
+#       Fixing size check for event nodes
+#
 ##############################################################
 
 # ------------------------------------------------------------
@@ -180,7 +186,7 @@ use FindBin qw($Bin);
 use lib "$FindBin::Bin/.";
 
 # Program version
-my $version = "1.6.3";
+my $version = "1.6.4";
 
 use Text::CSV;
 my $csvline = Text::CSV->new();
@@ -193,7 +199,7 @@ my $verbose = 0;
 my $DEBUG = 0;
 
 # output format in GML or DOT?
-my $gdf = 0;
+my $outputFormat = 0;
 
 # use xlabels in output? On by default!
 my $xlabels = 1;
@@ -623,10 +629,10 @@ our %printNode = {};
 our $globalField;
 
 # Write header.
-if (!$gdf) {print "digraph structs {\n";}
+if (!$outputFormat) {print "digraph structs {\n";}
 
 # global parameters
-if ($label && !$gdf) { 
+if ($label && !$outputFormat) {
     print "graph [label=\"AfterGlow ".$version;
     # if ($splitSourceAndTargetNodes) { print "split ";
     if ($eventNodeSplitMode) {print " - Split Mode: ".$eventNodeSplitMode;}
@@ -637,9 +643,13 @@ if ($label && !$gdf) {
     if ($sourceFanOutThreshold) {print " - Source Fan Out: ".$sourceFanOutThreshold;}
     if ($eventFanOutThreshold) {print " - Event Fan Out: ".$eventFanOutThreshold;}
     if ($propFileName) {print " - Property File: ".$propFileName;}
-    print "\", fontsize=8]\n"; 
-} elsif (!$gdf) {
+    print "\", fontsize=8]\n";
+} elsif (!$outputFormat) {
     print "graph [label=\"AfterGlow ".$version."\", fontsize=8];\n";
+} elsif($outputFormat == 2){
+    print "{
+    \"graph\": {
+        \"mode\":\"NORMAL\",\n";
 }
 
 # print "graph [bgcolor=black];\n";
@@ -647,7 +657,7 @@ if ($label && !$gdf) {
 
 my $options = "";
 
-if (defined(@sourceSizeExp) || defined(@eventSizeExp) || defined(@targetSizeExp)) { 
+if (defined(@sourceSizeExp) || defined(@eventSizeExp) || defined(@targetSizeExp)) {
     $options = ", fixedsize=true";
 }
 
@@ -656,7 +666,7 @@ if ($url) {
 }
 
 # Default, global variables
-if (!$gdf) {
+if (!$outputFormat) {
     print "node [shape=ellipse, style=filled, penwidth=0, fontsize=10, width=$maxNodeSize, height=$maxNodeSize, fontcolor=\"$labelColor\", label=\"\" $options];\n";
     print "edge [len=$edgelen];\n";
 }
@@ -666,12 +676,12 @@ $lineCount = 0;
 
 # Read each line from the file.
 while (($lineCount < $skipLines + $maxLines) and $line = <STDIN>) {
-   
-    chomp ($line);       
+
+    chomp ($line);
 
     # Increment the line count.
     $lineCount += 1;
-    
+
     # Verbose progress output.
     if ($verbose) {
        if ($lineCount < $skipLines) { $skippedLines = $lineCount; }
@@ -682,7 +692,7 @@ while (($lineCount < $skipLines + $maxLines) and $line = <STDIN>) {
 
     # Are we still suppoed to skip lines?
     next if $lineCount < $skipLines;
-    
+
     # Split the input into source, event and target.
     $csvline->parse($line);
     @fields = $csvline->fields();
@@ -706,23 +716,23 @@ while (($lineCount < $skipLines + $maxLines) and $line = <STDIN>) {
     # Figure out the clustering
 
     # if any of the cluster regexes matches, make a new node with the cluster name
-    if (@clusters) { 
+    if (@clusters) {
         $type="source";
-        $source=getCluster($source,@clusters); 
+        $source=getCluster($source,@clusters);
         $type="target";
         $target=getCluster($target,@clusters);
         $type="event";
         $event=getCluster($event,@clusters) unless ($twonodes);
     }
-    if (@source_clusters) { 
+    if (@source_clusters) {
         $type="source";
         $source=getCluster($source,@source_clusters);
     }
-    if ((@event_clusters) && (!$twonodes) ) { 
+    if ((@event_clusters) && (!$twonodes) ) {
         $type="event";
-        $event=getCluster($event,@event_clusters); 
+        $event=getCluster($event,@event_clusters);
     }
-    if (@target_clusters) { 
+    if (@target_clusters) {
         $type="target";
         $target=getCluster($target,@target_clusters);
     }
@@ -733,7 +743,7 @@ while (($lineCount < $skipLines + $maxLines) and $line = <STDIN>) {
         # Wow... UGLY. BUT: If you are using a -t option on a three-column input,
         # you might want to use the third column to steer some kind of property (size, etc.)
         # In order for that to work, we need to add this value back here ;)
-        @fields=($source,$target,$fields[2],$meta1,$meta2); 
+        @fields=($source,$target,$fields[2],$meta1,$meta2);
     } else {
         @fields=($source,$event,$target,$meta1,$meta2);
     }
@@ -743,11 +753,11 @@ while (($lineCount < $skipLines + $maxLines) and $line = <STDIN>) {
     # Edges with invisible nodes are discarded all the way
     if (getColor("sourcetarget", @fields) eq $invisibleColor) { next; }
     if ($twonodes) {
-        if ((getColor("source", @fields) eq $invisibleColor) 
+        if ((getColor("source", @fields) eq $invisibleColor)
         || (getColor("target", @fields) eq $invisibleColor)) { next; }
 
     } else {
-        if ((getColor("source", @fields) eq $invisibleColor) 
+        if ((getColor("source", @fields) eq $invisibleColor)
         || (getColor("event",@fields) eq $invisibleColor)
         || (getColor("target", @fields) eq $invisibleColor)) { next; }
     }
@@ -757,7 +767,7 @@ while (($lineCount < $skipLines + $maxLines) and $line = <STDIN>) {
     $eventName = &getEventName($source, $event, $target, $splitSourceAndTargetNodes) unless ($twonodes);
     $targetName = &getTargetName($source, $event, $target, $splitSourceAndTargetNodes);
 
-    # Figure out color for source node and store it. 
+    # Figure out color for source node and store it.
     # Known limitation: the last value this evaluates to is the one that will be used.
     # A nice thing would be nodes that have multiple colors.
     $sourceColorMap{$sourceName} = getColor("source", @fields);
@@ -770,7 +780,7 @@ while (($lineCount < $skipLines + $maxLines) and $line = <STDIN>) {
     $source=getLabel("source", @fields);
     # print STDERR "sourceLabel: $source / @fields\n";
     if ($source eq "__NULL_") {
-    $sourceMap{$sourceName} = "";         
+    $sourceMap{$sourceName} = "";
     } else {
     $sourceMap{$sourceName} = $source;
     }
@@ -790,8 +800,8 @@ while (($lineCount < $skipLines + $maxLines) and $line = <STDIN>) {
     }
 
     # calculate the size of the node
-    if (defined(@sourceSizeExp)) { 
-        # calculate the size of the node. Add to existing value to take care of 
+    if (defined(@sourceSizeExp)) {
+        # calculate the size of the node. Add to existing value to take care of
         # source/target nodes and nodes showing up multiple times
         if ($sumSource) {
             $sourceNodeSize{$sourceName} += getSize("source",@fields);
@@ -808,11 +818,11 @@ while (($lineCount < $skipLines + $maxLines) and $line = <STDIN>) {
         $eventCount{$eventName} += 1;
         $event=getLabel("event", @fields);
         if ($event eq "__NULL_") {
-        $eventMap{$eventName} = "";         
+        $eventMap{$eventName} = "";
         } else {
         $eventMap{$eventName} = $event;
         }
-        
+
             if ($eventFanOutThreshold > 0) {
             # fan out : a reference to the hash!
             $temp = $eventFanOut{$eventName};
@@ -821,9 +831,9 @@ while (($lineCount < $skipLines + $maxLines) and $line = <STDIN>) {
             $eventFanOut{$eventName} = \%foo;
         }
 
-        # calculate the size of the node. Add to existing value to take care of 
+        # calculate the size of the node. Add to existing value to take care of
         # source/target nodes and nodes showing up multiple times
-        if (defined(@eventSizeExp)) { 
+        if (defined(@eventSizeExp)) {
                 if ($sumEvent) {
                 $eventNodeSize{$eventName} += getSize("event",@fields);
             } else {
@@ -833,17 +843,17 @@ while (($lineCount < $skipLines + $maxLines) and $line = <STDIN>) {
         }
 
     }
-    
+
     # repeat all the above for the target node
     $targetColorMap{$targetName} = getColor("target", @fields);
     $targetCount{$targetName} += 1;
     $target=getLabel("target", @fields);
     if ($target eq "__NULL_") {
-       $targetMap{$targetName} = "";         
+       $targetMap{$targetName} = "";
     } else {
         $targetMap{$targetName} = $target;
     }
-    if (defined(@targetSizeExp)) { 
+    if (defined(@targetSizeExp)) {
         if ($sumTarget) {
             $targetNodeSize{$targetName} += getSize("target",@fields);
         } else {
@@ -857,13 +867,13 @@ while (($lineCount < $skipLines + $maxLines) and $line = <STDIN>) {
     $sourcetargetColorMap{$sourceName} = getColor ("sourcetarget", @fields);
 
     # Edge Colors::
-            
+
     # Add to maps. We need this is order to pick the proper
     # name for each node to add labels and other properties.
     if ($twonodes) {
 
         $sourceTargetLinkName = "$sourceName $targetName";
-        $sourceTargetLinkMap{$sourceTargetLinkName} = $sourceTargetLinkName; 
+        $sourceTargetLinkMap{$sourceTargetLinkName} = $sourceTargetLinkName;
 
         # Edge Color
     if (defined(@edgeColorExp)) {
@@ -908,6 +918,7 @@ while (($lineCount < $skipLines + $maxLines) and $line = <STDIN>) {
 # We are done with all the book kepping, output everything we learned
 
 # First work on the edges (don't print, but remember)
+my $is_first_edge = 1;
 my $edge_output = "";        # holds the data for edges to print later
 if ($twonodes) {
 
@@ -917,7 +928,7 @@ if ($twonodes) {
     my ($sourceName, $targetName) = $sourceTargetLinkName =~ /("[^"]*") (.*)/;
 
     # do the fan out calculation
-    my $fanout=1; # set to one to make the check further down true if the threshold 
+    my $fanout=1; # set to one to make the check further down true if the threshold
                 # is not set
     if ($sourceFanOutThreshold > 0) {
         my $temp = $sourceFanOut{$sourceName};
@@ -926,9 +937,9 @@ if ($twonodes) {
 
     # either of the nodes needs a support of > $omitThreshold to be drawn
     # and the source-node needs a fan out > sourceFanOutThreshold
-    if (($sourceCount{$sourceName} > $omitThreshold) 
+    if (($sourceCount{$sourceName} > $omitThreshold)
         && ($sourceCount{$sourceName} > $sourceThreshold)
-        && ($targetCount{$targetName} > $omitThreshold) 
+        && ($targetCount{$targetName} > $omitThreshold)
         && ($targetCount{$targetName} > $targetThreshold)
         && ($fanout > $sourceFanOutThreshold) ) {
 
@@ -938,21 +949,50 @@ if ($twonodes) {
             $color = $edgeColor{$sourceTargetLinkName};
         }
 
-        # Size 
+        # Size
         my $size = 0;
         if (defined(@edgeSizeExp)) {
             $size = $edgeSize{$sourceTargetLinkName};
         }
 
-        # print STDERR "size: $size / color: $color / gdf: $gdf\n";
-        
-        # Source -> target link. 
+        # print STDERR "size: $size / color: $color / output format: $outputFormat\n";
 
-        if ($gdf) {
+        # Source -> target link.
+
+        if ($outputFormat == 1) {
             if ($size == 0) { $size = 1; }
-            $edge_output .= "$sourceName,$targetName,true,".rgb($color).",$size\n"; 
+            $edge_output .= "$sourceName,$targetName,true,".rgb($color).",$size\n";
+        } elsif ($outputFormat == 2) {
+            if ($is_first_edge){
+                $is_first_edge = 0;
+                $edge_output .= "";
+            } else {
+                $edge_output .= ",\n";
+
+            }
+
+            $edge_output .= "\t\t{";
+
+            if ($color){
+                my $rgbcolor = rgb($color);
+                $edge_output .= "\t\t\t\t\"color\" : \"$rgbcolor\",\n";
+            }
+
+            if ($size){
+                $edge_output .= "\t\t\t\t\"size\" : \"$size\",\n";
+            }
+
+            $sourceTargetLinkName =~ tr/"\""//d;
+            $edge_output .= "
+                \t\t\"_id\": \"$sourceTargetLinkName\",
+                \t\t\"_type\": \"edge\",
+                \t\t\"_outV\": $sourceName,
+                \t\t\"_inV\": $targetName";
+
+            $edge_output .= "\n\t\t}";
+
         } else {
-            $edge_output .= "$sourceName -> $targetName"; 
+            $edge_output .= "$sourceName -> $targetName";
             if ($size || $color) {
                 $edge_output .= "[";
                 if (defined($color)) { $edge_output .= "color=$color, style=$edgeStyle";}
@@ -969,7 +1009,7 @@ if ($twonodes) {
     } else {
 
         print STDERR "Omitting: $sourceName -> $targetName\n" if ($verbose);
-        
+
     }
 
     }
@@ -979,7 +1019,7 @@ if ($twonodes) {
 
     # we need to do the event target pair first do determine Problem Number 1 below
     for my $sourceEventLinkName (keys %sourceEventLinkMap) {
-        
+
         # Source -> event link.
     my ($sourceName, $eventName) = $sourceEventLinkName =~ /("[^"]*") (.*)/;
 
@@ -993,14 +1033,14 @@ if ($twonodes) {
         my $temp = $eventFanOut{$eventName};
         $eventSize = keys %$temp;
     }
-    
+
     #print STDERR "sourceFanOut: $sourceName: $fanout\n";
 
-    if (($sourceCount{$sourceName} > $omitThreshold) 
+    if (($sourceCount{$sourceName} > $omitThreshold)
         && ($sourceCount{$sourceName} > $sourceThreshold)
         && ($eventCount{$eventName} > $omitThreshold)
         && ($eventCount{$eventName} > $eventThreshold)
-        && ($sourceSize > $sourceFanOutThreshold) 
+        && ($sourceSize > $sourceFanOutThreshold)
         && ($eventSize > $eventFanOutThreshold) ) {
 
         # Color
@@ -1008,7 +1048,7 @@ if ($twonodes) {
         if (defined(@edgeColorExp)) {
             $color = $edgeColor{$sourceEventLinkName};
         }
-    
+
         # Size
         my $size = 0;
         if (defined(@edgeSizeExp)) {
@@ -1016,14 +1056,38 @@ if ($twonodes) {
 
             # print STDERR "size: $size / color: $color\n";
         }
-        
-        # Source -> Event link. 
 
-        if ($gdf) {
+        # Source -> Event link.
+
+        if ($outputFormat == 1) {
             if ($size == 0) { $size = 1; }
-            $edge_output .= "$sourceName,$eventName,true,".rgb($color).",$size\n"; 
-        } else {
-            $edge_output .= "$sourceName -> $eventName"; 
+            $edge_output .= "$sourceName,$eventName,true,".rgb($color).",$size\n";
+        } elsif($outputFormat == 2) {
+            if ($is_first_edge){
+                $is_first_edge = 0;
+            } else {
+                $edge_output .= ",\n";
+
+            }
+            $edge_output .= "\t\t{";
+
+            if ($color){
+                my $rgbcolor = rgb($color);
+                $edge_output .= "\t\t\t\t\"color\" : \"$rgbcolor\",\n";
+            }
+
+            if ($size){
+                $edge_output .= "\t\t\t\t\"size\" : \"$size\",\n";
+            }
+            $sourceEventLinkName =~ tr/"\""//d;
+            $edge_output .= "
+                \t\"_id\": \"$sourceEventLinkName\",
+                \t\"_type\": \"edge\",
+                \t\"_outV\": $sourceName,
+                \t\"_inV\": $eventName";
+            $edge_output .= "\n\t\t}";
+        }else {
+            $edge_output .= "$sourceName -> $eventName";
             if ($size || $color) {
                 $edge_output .= " [";
                 if (defined($color)) { $edge_output .= "color=$color,style=$edgeStyle";}
@@ -1059,8 +1123,8 @@ if ($twonodes) {
         my $temp = $eventFanOut{$eventName};
         $fanout = keys %$temp;
     }
-    
-    if ( ($eventCount{$eventName} > $omitThreshold) 
+
+    if ( ($eventCount{$eventName} > $omitThreshold)
         && ($eventCount{$eventName} > $eventThreshold)
         && ($targetCount{$targetName} > $omitThreshold)
         && ($targetCount{$targetName} > $targetThreshold)
@@ -1080,14 +1144,40 @@ if ($twonodes) {
         }
 
         # print STDERR "size: $size / color: $color\n";
-        
-        # Event -> Target link. 
 
-        if ($gdf) {
+        # Event -> Target link.
+
+        if ($outputFormat == 1) {
             if ($size == 0) { $size = 1; }
-            $edge_output .= "$eventName,$targetName,true,".rgb($color).",$size\n"; 
-        } else {
-            $edge_output .= "$eventName -> $targetName"; 
+            $edge_output .= "$eventName,$targetName,true,".rgb($color).",$size\n";
+        } elsif ($outputFormat == 2) {
+            if ($is_first_edge){
+                $is_first_edge = 0;
+            } else {
+                $edge_output .= ",\n";
+
+            }
+            $edge_output .= "\t\t{";
+
+            if ($color){
+                my $rgbcolor = rgb($color);
+                $edge_output .= "\t\t\t\t\"color\" : \"$rgbcolor\",\n";
+            }
+
+            if ($size){
+                $edge_output .= "\t\t\t\t\"size\" : \"$size\",\n";
+            }
+            $eventTargetLinkName =~ tr/"\""//d;
+            $edge_output .= "
+                \t\"_id\": \"$eventTargetLinkName\",
+                \t\"_type\": \"edge\",
+                \t\"_outV\": $eventName,
+                \t\"_inV\": $targetName";
+
+            $edge_output .= "\n\t\t}";
+
+        }else {
+            $edge_output .= "$eventName -> $targetName";
             if ($size || $color) {
                 $edge_output .= " [";
                 if (defined($color)) { $edge_output .= "color=$color,style=$edgeStyle";}
@@ -1103,11 +1193,11 @@ if ($twonodes) {
 
     } else {
 
-        # Probelm Number 1: if the eventNode or the targetNode is not displayed for 
-        # some reason, we have to check that the sourceNode that belongs to these guys 
+        # Probelm Number 1: if the eventNode or the targetNode is not displayed for
+        # some reason, we have to check that the sourceNode that belongs to these guys
         # still has neighbors! Otherwise it has to be eliminated as well!
         # This scenario is taken care of in the next section...
-        
+
         print STDERR "Omitting: $eventName -> $targetName\n" if ($verbose);
 
     }
@@ -1115,13 +1205,16 @@ if ($twonodes) {
     }
 
 }
-  
+
 # Done with the edges, now come the nodes
-if ($gdf) { 
+if ($outputFormat == 1) {
     print "nodedef>name VARCHAR,label VARCHAR,width DOUBLE,height DOUBLE,color VARCHAR\n";
+} elsif($outputFormat == 2){
+   print "\t\"verticies\" : [\n";
 }
 
 # Write properties for the source nodes.
+my $is_first_node = 1;
 foreach $sourceName (keys %sourceMap) {
 
     my $fanout=1;
@@ -1129,13 +1222,13 @@ foreach $sourceName (keys %sourceMap) {
         my $temp = $sourceFanOut{$sourceName};
         $fanout = keys %$temp;
     }
-    
-    if (($sourceCount{$sourceName} <= $omitThreshold) 
+
+    if (($sourceCount{$sourceName} <= $omitThreshold)
         || ($sourceCount{$sourceName} <= $sourceThreshold)
-        || ($fanout <= $sourceFanOutThreshold) 
+        || ($fanout <= $sourceFanOutThreshold)
         || (!$printNode{$sourceName}) )  {
-        
-        $sourceMap{$sourceName}=();     # set to null so it could still 
+
+        $sourceMap{$sourceName}=();     # set to null so it could still
                                         # be written as the target node
         print STDERR "Omitting Node: $sourceName \n" if ($verbose);
         next;
@@ -1159,10 +1252,10 @@ foreach $sourceName (keys %sourceMap) {
 
     $source = $sourceMap{$sourceName};
 
-    if (!$nodeLabels) { $source=""; } 
-    if (!$sourceLabel) { $source=""; } 
+    if (!$nodeLabels) { $source=""; }
+    if (!$sourceLabel) { $source=""; }
 
-    if (!$sourceColor) { 
+    if (!$sourceColor) {
         print STDERR "Color Not Assigned for: $source\n";
         $sourceColor="white";
     }
@@ -1172,29 +1265,60 @@ foreach $sourceName (keys %sourceMap) {
     }
 
     # Prepare the node properties
-    print $sourceName;
+    if (!$outputFormat || $outputFormat == 1){
+        print $sourceName;
+    }
     if ($nodeCount) { $source .= " : ".$sourceCount{$sourceName}; }
 
-    if ($gdf) {
+    if ($outputFormat == 1) {
 
         print ",\"$source\"";       # this is the label
 
         # size of node
         my $size=1;
-        if (defined(@sourceSizeExp)) { 
+        if (defined(@sourceSizeExp)) {
             $size = sprintf ("%.2f",($maxNodeSize / $maxActualSourceNodeSize) * $sourceNodeSize{$sourceName});
         }
         print ",$size";
         print ",$size";
         print ",".rgb($sourceColor)."\n";
 
-    } else {
+    } elsif($outputFormat == 2) {
+            my $out = "";
+            if (!$is_first_node){
+                $out .= ",\n";
+            } else{
+                $out .= "\n";
+                $is_first_node = 0;
+            }
+            $out .= "\t\t{\n";
+
+            if ($sourceColor){
+                my $rgbcolor = rgb($sourceColor);
+                $out .= "\t\t\t\"color\" : \"$rgbcolor\",\n";
+            }
+
+            my $size=1;
+            if (defined(@sourceSizeExp)) {
+                $size = sprintf ("%.2f",($maxNodeSize / $maxActualSourceNodeSize) * $sourceNodeSize{$sourceName});
+            }
+            $out .= "\t\t\t\"size\" : \"$size\",\n";
+            $out .= "\t\t\t\"shape\" : \"$shapeSource\",\n";
+
+            $out .= "\t\t\t\"_id\": \"$source\",
+                \t\"_type\": \"vertex\",
+                \t\"_label\": \"$source\"";
+
+            $out .= "\n\t\t}";
+
+            print $out;
+    }else {
 
         if ($xlabels) { $ll = "xlabel=\"$source\""; } else { $ll = "label=\"$source\""; }
         my $out = " [fillcolor=$sourceColor, $ll";
 
         # size of node
-        if (defined(@sourceSizeExp)) { 
+        if (defined(@sourceSizeExp)) {
             #print STDERR "MaxActualSize: $maxActualSourceNodeSize maxNodeSize: $maxNodeSize currentSize: $sourceNodeSize{$sourceName}\n";
             my $size=0;
             $size = sprintf ("%.2f",($maxNodeSize / $maxActualSourceNodeSize) * $sourceNodeSize{$sourceName});
@@ -1205,7 +1329,7 @@ foreach $sourceName (keys %sourceMap) {
         if ($shapeSource ne "ellipse") {
             $out .= ",shape=$shapeSource";
         }
-        
+
         $out .= "]\n";
         print $out;
 
@@ -1228,12 +1352,12 @@ unless ($twonodes) {
             $size = keys %$temp;
         }
 
-        if (($eventCount{$eventName} <= $omitThreshold) 
+        if (($eventCount{$eventName} <= $omitThreshold)
             || ($eventCount{$eventName} <= $eventThreshold)
             || ($size <= $eventFanOutThreshold)
             || (!$printNode{$eventName}) )  {
 
-            $eventMap{$eventName}=();     # set to null so it could still 
+            $eventMap{$eventName}=();     # set to null so it could still
                                           # be written as the target node
             print STDERR "Omitting Node: $eventName \n" if ($verbose);
             next;
@@ -1242,41 +1366,72 @@ unless ($twonodes) {
 
         $eventColor = $eventColorMap{$eventName};
 
-        if ((!$nodeLabels) || (!$eventLabel)) { 
-            $event=""; 
-        } else { 
-            $event = $eventMap{$eventName}; 
+        if ((!$nodeLabels) || (!$eventLabel)) {
+            $event="";
+        } else {
+            $event = $eventMap{$eventName};
         }
 
-        if (!$eventColor) { 
+        if (!$eventColor) {
             print STDERR "Color Not Assigned for: $event\n";
             $eventColor="cyan";
         }
 
         # Prepare the node properties
-        print $eventName;
+        if (!$outputFormat || $outputFormat == 1){
+            print $eventName;
+        }
         if ($nodeCount) { $event .= " : ".$eventCount{$eventName}; }
 
-        if ($gdf) {
+        if ($outputFormat == 1) {
 
             print ",\"$event\"";       # this is the label
 
             # size of node
             my $size=1;
-            if (defined(@seventSizeExp)) { 
+            if (defined(@eventSizeExp)) {
                 $size = sprintf ("%.2f",($maxNodeSize / $maxActualEventNodeSize) * $eventNodeSize{$eventName});
             }
             print ",$size";
             print ",$size";
             print ",".rgb($eventColor)."\n";
 
-        } else {
+        } elsif($outputFormat == 2){
+            my $out = "";
+            if (!$is_first_node){
+                $out .= ",\n";
+            } else{
+                $out .= "\n";
+                $is_first_node = 0;
+            }
+            $out .= "\t\t{\n";
+
+            if ($eventColor){
+                my $rgbcolor = rgb($eventColor);
+                $out .= "\t\t\t\"color\" : \"$rgbcolor\",\n";
+            }
+
+            my $size=1;
+            if (defined(@eventSizeExp)) {
+                $size = sprintf ("%.2f",($maxNodeSize / $maxActualEventNodeSize) * $eventNodeSize{$eventName});
+            }
+            $out .= "\t\t\t\"size\" : \"$size\",\n";
+            $out .= "\t\t\t\"shape\" : \"$shapeEvent\",\n";
+
+            $out .= "\t\t\t\"_id\": \"$event\",
+                \t\"_type\": \"vertex\",
+                \t\"_label\": \"$event\"";
+
+            $out .= "\n\t\t}";
+
+            print $out;
+        }else {
 
             if ($xlabels) { $ll = "xlabel=\"$event\""; } else { $ll = "label=\"$event\""; }
             my $out = " [shape=box, fillcolor=$eventColor, $ll";
 
             # size of node
-            if (defined(@eventSizeExp)) { 
+            if (defined(@eventSizeExp)) {
                 my $size=0;
                 $size = sprintf ("%.2f",($maxNodeSize / $maxActualEventNodeSize) * $eventNodeSize{$eventName});
                 $out .= ",width=\"$size\"";
@@ -1287,7 +1442,7 @@ unless ($twonodes) {
                 if ($shapeEvent ne "ellipse") {
                 $out .= ",shape=$shapeEvent";
             }
-                
+
             $out .= "]\n";
             print $out;
         }
@@ -1303,7 +1458,7 @@ foreach $targetName (keys %targetMap) {
     if ($sourceMap{$targetName}) { next; }
     if ($eventMap{$targetName}) { next; }
 
-    if ( ($targetCount{$targetName} <= $omitThreshold) 
+    if ( ($targetCount{$targetName} <= $omitThreshold)
             || ($targetCount{$targetName} <= $targetThreshold)
             || (!$printNode{$targetName}) )  {
 
@@ -1316,36 +1471,67 @@ foreach $targetName (keys %targetMap) {
 
     $target = $targetMap{$targetName};
 
-    if (!$nodeLabels) { $target=""; } 
-    if (!$targetLabel) { $target=""; } 
-    if (!$targetColor) { 
+    if (!$nodeLabels) { $target=""; }
+    if (!$targetLabel) { $target=""; }
+    if (!$targetColor) {
         print STDERR "Color Not Assigned for: $target\n";
         $targetColor="red";
     }
 
-    print $targetName;
+    if (!$outputFormat || $outputFormat == 1){
+        print $targetName;
+    }
     if ($nodeCount) { $target .= " : ".$targetCount{$targetName}; }
 
-    if ($gdf) {
+    if ($outputFormat == 1) {
 
         print ",\"$target\"";       # this is the label
 
         # size of node
         my $size=1;
-        if (defined(@targetSizeExp)) { 
+        if (defined(@targetSizeExp)) {
             $size = sprintf ("%.2f",($maxNodeSize / $maxActualTargetNodeSize) * $targetNodeSize{$targetName});
         }
         print ",$size";
         print ",$size";
         print ",".rgb($sourceColor)."\n";
 
-    } else {
+    } elsif ($outputFormat == 2){
+            my $out = "";
+            if (!$is_first_node){
+                $out .= ",\n";
+            } else{
+                $out .= "\n";
+                $is_first_node = 0;
+            }
+            $out .= "\t\t{\n";
+
+            if ($targetColor){
+                my $rgbcolor = rgb($targetColor);
+                $out .= "\t\t\t\"color\" : \"$rgbcolor\",\n";
+            }
+
+            my $size=1;
+            if (defined(@targetSizeExp)) {
+                $size = sprintf ("%.2f",($maxNodeSize / $maxActualTargetNodeSize) * $targetNodeSize{$targetName});
+            }
+            $out .= "\t\t\t\"size\" : \"$size\",\n";
+            $out .= "\t\t\t\"shape\" : \"$shapeTarget\",\n";
+
+            $out .= "\t\t\t\"_id\": \"$target\",
+                \t\"_type\": \"vertex\",
+                \t\"_label\": \"$target\"";
+
+            $out .= "\n\t\t}";
+
+            print $out;
+    }else {
 
         if ($xlabels) { $ll = "xlabel=\"$target\""; } else { $ll = "label=\"$target\""; }
         my $out = " [fillcolor=$targetColor, $ll";
 
         # size of node
-        if (defined(@targetSizeExp)) { 
+        if (defined(@targetSizeExp)) {
             # print STDERR "MaxActualSize: $maxActualTargetNodeSize maxNodeSize: $maxNodeSize currentSize: $targetNodeSize{$targetName} targetName: $targetName\n";
             my $size=0;
             $size = sprintf ("%.2f",($maxNodeSize / $maxActualTargetNodeSize) * $targetNodeSize{$targetName});
@@ -1357,20 +1543,30 @@ foreach $targetName (keys %targetMap) {
         if ($shapeTarget ne "ellipse") {
             $out .= ",shape=$shapeTarget";
         }
-        
+
         $out .= "]\n";
         print $out;
 
     }
-    
+
 }
 
 # now that the nodes have been printed, print the edges.
-if ($gdf) {print "edgedef>node1 VARCHAR,node2 VARCHAR,directed BOOLEAN,color VARCHAR,weight DOUBLE\n";}
+my $is_first_edge = 1;
+if ($outputFormat == 1) {
+    print "edgedef>node1 VARCHAR,node2 VARCHAR,directed BOOLEAN,color VARCHAR,weight DOUBLE\n";
+} elsif ($outputFormat == 2){
+    print "\n\t],\n\t\"edges\" : [\n";
+}
+
 print $edge_output;
 
+if ($outputFormat == 2){
+    print "\n\t\t]\n\t}\n}";
+}
+
 # Write dot footer.
-if (!$gdf) {
+if (!$outputFormat) {
     print "}\n";
 }
 
@@ -1400,10 +1596,10 @@ sub rgb {
 # ------------------------------------------------------------
 
 # function: subnet(value,network/mask)
-# return:   0 or 1 depending on whether value is in the network 
+# return:   0 or 1 depending on whether value is in the network
 #           with the given mask
 # example:  subnet($fields[0],0.0.0.0/7)
-# Note:     I am sure you can make this more efficient (instead 
+# Note:     I am sure you can make this more efficient (instead
 #         of converting both IPs and then masking them.
 #         Well, thinking about it while running, this is needed.
 sub subnet {
@@ -1448,8 +1644,8 @@ sub any_regex {
 }
 
 # function: field()
-# return:   Type-relative (source, event, target). 
-#      
+# return:   Type-relative (source, event, target).
+#
 # example:  "red" if (field() eq "foo");
 sub field {
 
@@ -1463,10 +1659,10 @@ sub field {
 # ram: 06/28/06 This is really the same as match() without the global field, but that is set
 #               anyways, so killing it!
 # function: regex("match_and_return_regex")
-# return:   
-#         Type-relative (source, event, target). Only returns if that column 
+# return:
+#         Type-relative (source, event, target). Only returns if that column
 #         matches.
-#      
+#
 # example:  color="cornflowerblue" if (regex("Internal"));
 # sub regex {
 # ($value) = @_;
@@ -1483,19 +1679,19 @@ sub match {
 }
 
 # function: regex_replace("replace_regex")
-# return:   Use a regular expression to replace the input string. The match is 
+# return:   Use a regular expression to replace the input string. The match is
 #         returned
-#         Type-relative (source, event, target). Only returns if that column 
+#         Type-relative (source, event, target). Only returns if that column
 #         matches.
 # example:  cluster.source=regex_replace("(\\d\+\\.\\d+)")."/16" \
-#           if (!match("^(212\.254\.110|195\.141\.69)")) 
-#        if one of the two ranges match(), then return the first two octets of 
+#           if (!match("^(212\.254\.110|195\.141\.69)"))
+#        if one of the two ranges match(), then return the first two octets of
 #        the source IP and add the "/16" string.
 sub regex_replace {
     ($regex) = @_;
     #print STDERR "globalField: $globalField / regex: $regex \n";
 
-    return ($globalField =~ /$regex/)[0]; 
+    return ($globalField =~ /$regex/)[0];
 }
 
 # function: get_severity(severity, [steps])
@@ -1545,8 +1741,8 @@ sub get_severity {
 
 
 # function: notreg("return_regex","match_regex")
-# return:   Execute the return_regex on the field, if match_regex does NOT match. 
-#         Type-relative (source, event, target). Only returns if that column 
+# return:   Execute the return_regex on the field, if match_regex does NOT match.
+#         Type-relative (source, event, target). Only returns if that column
 #         matches.
 # example:  cluster.source=notreg("(\\d\+\\.\\d+)","^(212\.254\.110|195\.141\.69)")
 #        if NOT one of the two ranges, then return the first two octets of the IP
@@ -1562,12 +1758,12 @@ sub get_severity {
 
 # Computes clusters
 sub getCluster {
- 
+
     my ($field,@clusters) = @_;
     my $return;
 
     for my $cluster (@clusters) {
-        #print STDERR "getCluster() field: $field / cluster: $cluster\n";    
+        #print STDERR "getCluster() field: $field / cluster: $cluster\n";
 
         # setting the globalField for the function!
         $globalField=$field;
@@ -1576,15 +1772,15 @@ sub getCluster {
 
     }
 
-    if ($return) {$field=$return;} 
-    #print STDERR "return: $field\n";    
+    if ($return) {$field=$return;}
+    #print STDERR "return: $field\n";
     return $field;
 
 }
 
 # Computes the name to use for a source node.
 sub getSourceName {
-    
+
     # Get the arguments.
     ($source, $event, $target) = @_;
 
@@ -1595,7 +1791,7 @@ sub getSourceName {
 
 # Computes the name to use for a source node.
 sub getEventName {
-    
+
     # Get the arguments.
     ($source, $event, $target) = @_;
 
@@ -1607,7 +1803,7 @@ sub getEventName {
 
 # Computes the name to use for a source node.
 sub getTargetName {
-    
+
     # Get the arguments.
     ($source, $event, $target) = @_;
 
@@ -1618,7 +1814,7 @@ sub getTargetName {
 
 # Return the color for this node
 
-# Optimization FROM: 
+# Optimization FROM:
 # %Time ExclSec CumulS #Calls sec/call Csec/c  Name
 #  75.5   10.78 15.242   6000   0.0018 0.0025  main::getColor
 #  31.0   4.434  4.434 192000   0.0000 0.0000  main::subnet
@@ -1629,7 +1825,7 @@ sub getTargetName {
 sub getColor {
 
     print STDERR "getColor()" if $DEBUG;
-    
+
     # Get the arguments
     # type element of ["source"|"target"|"event"]
     ($type, @fields) = @_;
@@ -1637,15 +1833,15 @@ sub getColor {
     # build a cache so we don't have to go through it all
     my $index;
     if ($twonodes) {
-        $index = $fields[0].$fields[1].$type; 
+        $index = $fields[0].$fields[1].$type;
     } else {
         $index = $fields[0].$fields[1].$fields[2].$type;
     }
 
     # cache hit?
-    if (defined($cache{$index})) { 
+    if (defined($cache{$index})) {
         print STDERR " cache hit: $cache{$index}\n" if $DEBUG;
-        return $cache{$index}; 
+        return $cache{$index};
     }
 
     $variableColExp = $type."ColorExp";
@@ -1671,8 +1867,8 @@ sub getColor {
     for my $var (@$variableColExp) {
         print STDERR " | eval: $var" if $DEBUG;
         print STDERR " | field(): ".field() if $DEBUG;
-    
-        if ($var =~ /^#[\da-fA-F]{6,8}$/) { 
+
+        if ($var =~ /^#[\da-fA-F]{6,8}$/) {
             $color = $var;
             last;
         } elsif ($color = eval($var)) {
@@ -1695,12 +1891,12 @@ sub getColor {
         # did we already index this color?
         if (exists($colorIndex{$color})) {
             $color=$colorIndex{$color};
-         } else {    
+         } else {
 
             # Only scream if the color was actually set.
             if ($color) {print STDERR "Not a color: $color\n";}
 
-            $colorIndex{$color}=$colors[$colorIndexCount];    
+            $colorIndex{$color}=$colors[$colorIndexCount];
             $color=$colors[$colorIndexCount];
             $colorIndexCount ++;
         }
@@ -1718,7 +1914,7 @@ sub getColor {
 }
 
 sub getSize {
-    
+
     # Get the arguments
     # type element of ["source"|"target"|"event"]
     ($type, @fields) = @_;
@@ -1726,7 +1922,7 @@ sub getSize {
     # build a cache so we don't have to go through it all
     #my $index;
     #if ($twonodes) {
-    #$index = $fields[0].$fields[1].$type; 
+    #$index = $fields[0].$fields[1].$type;
     #} else {
     #$index = $fields[0].$fields[1].$fields[2].$type;
     #}
@@ -1753,18 +1949,18 @@ sub getSize {
     }
 
     for my $var (@$variableSizeExp) {
-        if ($size = eval($var)) { 
+        if ($size = eval($var)) {
             # check whether the assignment happened in a "catch-all" condition, which can
             # be identified by not having a "if" in the statement.
             # if ($type eq "target") {print STDERR "eval: $var :: $fields[1]\n";}
             if ($var =~ /if/) {$notCatchAllSize{$type.$globalField}=$size;}
-            last; 
+            last;
         }
     }
 
     # for undefined edge sizes:
     if ((!$size) && ($type eq "edge")) {$size = $defaultEdgeSize;}
-    
+
     # print STDERR "getSize: $size \n";
 
     # add to cache
@@ -1775,7 +1971,7 @@ sub getSize {
 }
 
 sub getLabel {
-    
+
     # Get the arguments
     # type element of ["source"|"target"|"event"]
     ($type, @fields) = @_;
@@ -1783,7 +1979,7 @@ sub getLabel {
     # build a cache so we don't have to go through it all
     #my $index;
     #if ($twonodes) {
-    #$index = $fields[0].$fields[1].$type; 
+    #$index = $fields[0].$fields[1].$type;
     #} else {
     #$index = $fields[0].$fields[1].$fields[2].$type;
     #}
@@ -1818,12 +2014,12 @@ sub getLabel {
             $label="__NULL_";
             last;
         }
-        if ($label = eval($var)) { 
+        if ($label = eval($var)) {
             # check whether the assignment happened in a "catch-all" condition, which can
             # be identified by not having a "if" in the statement.
             # if ($type eq "target") {print STDERR "eval: $var :: $fields[1]\n";}
             if ($var =~ /if/) {$notCatchAllLabel{$type.$globalField}=$label;}
-            last; 
+            last;
         }
     }
 
@@ -1847,7 +2043,7 @@ sub propertyfile() {
         print STDERR "No property file specified, using default settings.\n";
         return;
     }
-    
+
     open PROPFILE, "< $propFileName" or die "Cannot open $propFileName: $!";
 
     my $line = 0;
@@ -1876,7 +2072,9 @@ sub propertyfile() {
         # print STDERR "$name=$value\n"; ### DEBUG ###
 
         if ($name eq "gdf") {
-            $gdf = 1;
+            $outputFormat = 1;
+        } elsif($name eq "graphson"){
+            $outputFormat = 2;
         }
         elsif ($name eq "xlabels") {
             eval {$xlabels = $value;};
@@ -1887,13 +2085,13 @@ sub propertyfile() {
             push (@targetColorExp,$value);
             push (@eventColorExp,$value);
             push (@sourcetargetColorExp,$value);
-        } 
+        }
         elsif ($name eq "color.source") {
             push (@sourceColorExp,$value);
-        } 
+        }
         elsif ($name eq "color.target") {
             push (@targetColorExp,$value);
-        } 
+        }
         elsif ($name eq "color.event") {
             push (@eventColorExp,$value);
         }
@@ -2029,7 +2227,7 @@ sub propertyfile() {
         }
 
     }
-    
+
     print STDERR "----------- Done Reading Properties\n" if ($verbose);
     print STDERR "\n" if ($verbose);
 
@@ -2041,11 +2239,11 @@ sub propertyfile() {
 sub init() {
     my %opt;
     use Getopt::Std;
-    getopts("adknhtvsqri:w:p:l:b:e:c:o:f:g:m:x:", \%opt ) or usage();
+    getopts("adjknhtvsqri:w:p:l:b:e:c:o:f:g:m:x:", \%opt ) or usage();
 
     # Help?
     usage() if $opt{h};
-    
+
     # Verbose?
     $verbose = 1 if $opt{v};
 
@@ -2099,14 +2297,15 @@ sub init() {
     # Maximum node size
     $maxNodeSize = $opt{m} if $opt{m};
 
-    # GDF output mode
-    $gdf = 1 if $opt{k};
+    # GDF or GraphSON output mode
+    $outputFormat = 1 if $opt{k};
+    $outputFormat = 2 if $opt{j};
 
     if ($opt{q}) {
         open (STDOUT, ">/dev/null") or die ("Quiet mode did not work! Could not redirect STDOUT to /dev/null");
         open (STDERR, ">/dev/null") or die ("Quiet mode did not work! Could not redirect STDERR to /dev/null");
     }
-    
+
     if ($opt{w}) {
         open (STDOUT, ">$opt{w}") or die ("Could not redirect STDERR to $opt{w}");
     }
@@ -2123,11 +2322,11 @@ sub usage() {
     print STDERR << "EOF";
 
 Afterglow $version ---------------------------------------------------------------
-    
+
 A program to visualize network activitiy data using graphs.
 Uses the dot graph layout program fromt the Graphviz suite.
 Input data is expected to be in this simple CSV-style format:
-    
+
     [subject],  [predicate], [object]
     10.10.10.10, ACCEPT,     216.239.37.99
 
@@ -2143,10 +2342,11 @@ Usage:   afterglow.pl [-adhnstv] [-b lines] [-c conffile] [-e length] [-f thresh
 -h           : this (help) message
 -i file      : read from input file, instead of from STDIN
 -k           : output in GDF format instead of DOT
+-j           : output in GraphSON format instead of DOT
 -l lines     : the maximum number of lines to read
 -m           : the maximum size for a node
 -n           : don't print node labels
--o threshold : omit threshold (minimum count for nodes to be displayed) 
+-o threshold : omit threshold (minimum count for nodes to be displayed)
            Non-connected nodes will be filtered too.
 -p mode      : split mode for predicate nodes where mode is
                 0 = only one unique predicate node (default)

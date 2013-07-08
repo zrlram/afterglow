@@ -19,7 +19,7 @@
 # Written by:    Christian Beedgen (krist@digitalresearch.org)
 #                Raffael Marty (ram@cryptojail.net)
 #
-# Version:    1.6.3
+# Version:    1.6.4
 #
 # URL:        http://afterglow.sourceforge.net
 #
@@ -169,6 +169,12 @@
 #	     Fixing import path for Text::CSV to be local
 # 	     Fixing copyright. Sorry Christian!
 #
+# 1.6.4 Adding support of GraphSON output:
+#           graphson = true
+#       Or:
+#           -j on commandline
+#       Fixing size check for event nodes
+#
 ##############################################################
 
 # ------------------------------------------------------------
@@ -180,7 +186,7 @@ use FindBin qw($Bin);
 use lib "$FindBin::Bin/.";
 
 # Program version
-my $version = "1.6.3";
+my $version = "1.6.4";
 
 use Text::CSV;
 my $csvline = Text::CSV->new();
@@ -972,10 +978,10 @@ if ($twonodes) {
                 $edge_output .= "\t\t\t\t\"color\" : \"$rgbcolor\",\n";
             }
 
-            if ($size){ 
+            if ($size){
                 $edge_output .= "\t\t\t\t\"size\" : \"$size\",\n";
             }
-            
+
             $sourceTargetLinkName =~ tr/"\""//d;
             $edge_output .= "
                 \t\t\"_id\": \"$sourceTargetLinkName\",
@@ -1070,7 +1076,7 @@ if ($twonodes) {
                 $edge_output .= "\t\t\t\t\"color\" : \"$rgbcolor\",\n";
             }
 
-            if ($size){ 
+            if ($size){
                 $edge_output .= "\t\t\t\t\"size\" : \"$size\",\n";
             }
             $sourceEventLinkName =~ tr/"\""//d;
@@ -1158,7 +1164,7 @@ if ($twonodes) {
                 $edge_output .= "\t\t\t\t\"color\" : \"$rgbcolor\",\n";
             }
 
-            if ($size){ 
+            if ($size){
                 $edge_output .= "\t\t\t\t\"size\" : \"$size\",\n";
             }
             $eventTargetLinkName =~ tr/"\""//d;
@@ -1298,7 +1304,7 @@ foreach $sourceName (keys %sourceMap) {
             }
             $out .= "\t\t\t\"size\" : \"$size\",\n";
             $out .= "\t\t\t\"shape\" : \"$shapeSource\",\n";
-           
+
             $out .= "\t\t\t\"_id\": \"$source\",
                 \t\"_type\": \"vertex\",
                 \t\"_label\": \"$source\"";
@@ -1411,7 +1417,7 @@ unless ($twonodes) {
             }
             $out .= "\t\t\t\"size\" : \"$size\",\n";
             $out .= "\t\t\t\"shape\" : \"$shapeEvent\",\n";
-            
+
             $out .= "\t\t\t\"_id\": \"$event\",
                 \t\"_type\": \"vertex\",
                 \t\"_label\": \"$event\"";
@@ -1511,7 +1517,7 @@ foreach $targetName (keys %targetMap) {
             }
             $out .= "\t\t\t\"size\" : \"$size\",\n";
             $out .= "\t\t\t\"shape\" : \"$shapeTarget\",\n";
-            
+
             $out .= "\t\t\t\"_id\": \"$target\",
                 \t\"_type\": \"vertex\",
                 \t\"_label\": \"$target\"";

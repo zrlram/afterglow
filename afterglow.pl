@@ -606,6 +606,10 @@ my %color_to_rgb_map = (
 );
 
 # Bunch of associative arrays we will need.
+our %nodeIdMap = ();
+our $totalNodes = 0;
+my $totalEdges = 0;
+
 %sourceMap = (); %eventMap = (); %targetMap = ();
 %sourceEventLinkMap = (); %eventTargetLinkMap = ();
 %sourceTargetLinkMap = {};
@@ -982,12 +986,14 @@ if ($twonodes) {
                 $edge_output .= "\t\t\t\t\"size\" : \"$size\",\n";
             }
 
-            $sourceTargetLinkName =~ tr/"\""//d;
+            $sourceTargetId = ++$totalEdges;
+            $sourceId = get_node_id($sourceName);
+            $targetId = get_node_id($targetName);
             $edge_output .= "
-                \t\t\"_id\": \"$sourceTargetLinkName\",
+                \t\t\"_id\": \"$sourceTargetId\",
                 \t\t\"_type\": \"edge\",
-                \t\t\"_outV\": $sourceName,
-                \t\t\"_inV\": $targetName";
+                \t\t\"_outV\": \"$sourceId\",
+                \t\t\"_inV\": \"$targetId\"";
 
             $edge_output .= "\n\t\t}";
 
@@ -1011,7 +1017,6 @@ if ($twonodes) {
         print STDERR "Omitting: $sourceName -> $targetName\n" if ($verbose);
 
     }
-
     }
 
 } else {
@@ -1079,12 +1084,14 @@ if ($twonodes) {
             if ($size){
                 $edge_output .= "\t\t\t\t\"size\" : \"$size\",\n";
             }
-            $sourceEventLinkName =~ tr/"\""//d;
+            $sourceEventId = ++$totalEdges;
+            $sourceId = get_node_id($sourceName);
+            $eventId = get_node_id($eventName);
             $edge_output .= "
-                \t\"_id\": \"$sourceEventLinkName\",
+                \t\"_id\": \"$sourceEventId\",
                 \t\"_type\": \"edge\",
-                \t\"_outV\": $sourceName,
-                \t\"_inV\": $eventName";
+                \t\"_outV\": \"$sourceId\",
+                \t\"_inV\": \"$eventId\"";
             $edge_output .= "\n\t\t}";
         }else {
             $edge_output .= "$sourceName -> $eventName";
@@ -1167,12 +1174,15 @@ if ($twonodes) {
             if ($size){
                 $edge_output .= "\t\t\t\t\"size\" : \"$size\",\n";
             }
-            $eventTargetLinkName =~ tr/"\""//d;
+
+            $eventTargetId = ++$totalEdges;
+            $eventId = get_node_id($eventName);
+            $targetId = get_node_id($targetName);
             $edge_output .= "
-                \t\"_id\": \"$eventTargetLinkName\",
+                \t\"_id\": \"$eventTargetId\",
                 \t\"_type\": \"edge\",
-                \t\"_outV\": $eventName,
-                \t\"_inV\": $targetName";
+                \t\"_outV\": \"$eventId\",
+                \t\"_inV\": \"$targetId\"";
 
             $edge_output .= "\n\t\t}";
 
@@ -1210,7 +1220,7 @@ if ($twonodes) {
 if ($outputFormat == 1) {
     print "nodedef>name VARCHAR,label VARCHAR,width DOUBLE,height DOUBLE,color VARCHAR\n";
 } elsif($outputFormat == 2){
-   print "\t\"verticies\" : [\n";
+   print "\t\"vertices\" : [\n";
 }
 
 # Write properties for the source nodes.
@@ -1305,7 +1315,8 @@ foreach $sourceName (keys %sourceMap) {
             $out .= "\t\t\t\"size\" : \"$size\",\n";
             $out .= "\t\t\t\"shape\" : \"$shapeSource\",\n";
 
-            $out .= "\t\t\t\"_id\": \"$source\",
+            $sourceId = get_node_id($source);
+            $out .= "\t\t\t\"_id\": \"$sourceId\",
                 \t\"_type\": \"vertex\",
                 \t\"_label\": \"$source\"";
 
@@ -1418,7 +1429,8 @@ unless ($twonodes) {
             $out .= "\t\t\t\"size\" : \"$size\",\n";
             $out .= "\t\t\t\"shape\" : \"$shapeEvent\",\n";
 
-            $out .= "\t\t\t\"_id\": \"$event\",
+            $eventId = get_node_id($event);
+            $out .= "\t\t\t\"_id\": \"$eventId\",
                 \t\"_type\": \"vertex\",
                 \t\"_label\": \"$event\"";
 
@@ -1518,7 +1530,8 @@ foreach $targetName (keys %targetMap) {
             $out .= "\t\t\t\"size\" : \"$size\",\n";
             $out .= "\t\t\t\"shape\" : \"$shapeTarget\",\n";
 
-            $out .= "\t\t\t\"_id\": \"$target\",
+            $targetId = get_node_id($target);
+            $out .= "\t\t\t\"_id\": \"$targetId\",
                 \t\"_type\": \"vertex\",
                 \t\"_label\": \"$target\"";
 
@@ -1738,6 +1751,20 @@ sub get_severity {
 
 }
 
+
+sub get_node_id{
+    ($nodeName) = @_;
+    $nodeName =~ s/"//g;
+
+    if (exists $nodeIdMap{$nodeName}){
+        $nodeIdMap{$nodeName}
+
+    } else {
+        $nodeIdMap{$nodeName} = ++$totalNodes;
+        $totalNodes;
+    }
+
+}
 
 
 # function: notreg("return_regex","match_regex")

@@ -990,10 +990,10 @@ if ($twonodes) {
             $sourceId = get_node_id($sourceName);
             $targetId = get_node_id($targetName);
             $edge_output .= "
-                \t\t\"_id\": \"$sourceTargetId\",
+                \t\t\"_id\": $sourceTargetId,
                 \t\t\"_type\": \"edge\",
-                \t\t\"_outV\": \"$sourceId\",
-                \t\t\"_inV\": \"$targetId\"";
+                \t\t\"_outV\": $sourceId,
+                \t\t\"_inV\": $targetId";
 
             $edge_output .= "\n\t\t}";
 
@@ -1088,10 +1088,11 @@ if ($twonodes) {
             $sourceId = get_node_id($sourceName);
             $eventId = get_node_id($eventName);
             $edge_output .= "
-                \t\"_id\": \"$sourceEventId\",
+                \t\"_id\": $sourceEventId,
                 \t\"_type\": \"edge\",
-                \t\"_outV\": \"$sourceId\",
-                \t\"_inV\": \"$eventId\"";
+                \t\"_outV\": $sourceId,
+		\t\"_inV\": $eventId,
+                \t\"_label\": \"sourcevent\"";
             $edge_output .= "\n\t\t}";
         }else {
             $edge_output .= "$sourceName -> $eventName";
@@ -1179,10 +1180,11 @@ if ($twonodes) {
             $eventId = get_node_id($eventName);
             $targetId = get_node_id($targetName);
             $edge_output .= "
-                \t\"_id\": \"$eventTargetId\",
+                \t\"_id\": $eventTargetId,
                 \t\"_type\": \"edge\",
-                \t\"_outV\": \"$eventId\",
-                \t\"_inV\": \"$targetId\"";
+                \t\"_outV\": $eventId,
+		\t\"_inV\": $targetId,
+                \t\"_label\": \"eventtarget\"";
 
             $edge_output .= "\n\t\t}";
 
@@ -1316,7 +1318,7 @@ foreach $sourceName (keys %sourceMap) {
             $out .= "\t\t\t\"shape\" : \"$shapeSource\",\n";
 
             $sourceId = get_node_id($source);
-            $out .= "\t\t\t\"_id\": \"$sourceId\",
+            $out .= "\t\t\t\"_id\": $sourceId,
                 \t\"_type\": \"vertex\",
                 \t\"_label\": \"$source\"";
 
@@ -1430,7 +1432,7 @@ unless ($twonodes) {
             $out .= "\t\t\t\"shape\" : \"$shapeEvent\",\n";
 
             $eventId = get_node_id($event);
-            $out .= "\t\t\t\"_id\": \"$eventId\",
+            $out .= "\t\t\t\"_id\": $eventId,
                 \t\"_type\": \"vertex\",
                 \t\"_label\": \"$event\"";
 
@@ -1531,7 +1533,7 @@ foreach $targetName (keys %targetMap) {
             $out .= "\t\t\t\"shape\" : \"$shapeTarget\",\n";
 
             $targetId = get_node_id($target);
-            $out .= "\t\t\t\"_id\": \"$targetId\",
+            $out .= "\t\t\t\"_id\": $targetId,
                 \t\"_type\": \"vertex\",
                 \t\"_label\": \"$target\"";
 

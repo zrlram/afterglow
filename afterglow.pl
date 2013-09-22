@@ -1280,8 +1280,10 @@ foreach $sourceName (keys %sourceMap) {
     if (!$outputFormat || $outputFormat == 1){
         print $sourceName;
     }
-    if ($nodeCount) { $source .= " : ".$sourceCount{$sourceName}; }
 
+    if ($outputFormat != 2){
+    	if ($nodeCount) { $source .= " : ".$sourceCount{$sourceName}; }
+    }
     if ($outputFormat == 1) {
 
         print ",\"$source\"";       # this is the label
@@ -1316,6 +1318,9 @@ foreach $sourceName (keys %sourceMap) {
             }
             $out .= "\t\t\t\"size\" : \"$size\",\n";
             $out .= "\t\t\t\"shape\" : \"$shapeSource\",\n";
+            if ($nodeCount){
+            	$out .= "\t\t\t\"occurrences\" : \"$sourceCount{$sourceName}\",\n";
+        	}
 
             $sourceId = get_node_id($source);
             $out .= "\t\t\t\"_id\": \"$sourceId\",
@@ -1394,7 +1399,10 @@ unless ($twonodes) {
         if (!$outputFormat || $outputFormat == 1){
             print $eventName;
         }
-        if ($nodeCount) { $event .= " : ".$eventCount{$eventName}; }
+
+        if ($outputFormat != 2){
+        	if ($nodeCount) { $event .= " : ".$eventCount{$eventName}; }
+        }
 
         if ($outputFormat == 1) {
 
@@ -1430,6 +1438,9 @@ unless ($twonodes) {
             }
             $out .= "\t\t\t\"size\" : \"$size\",\n";
             $out .= "\t\t\t\"shape\" : \"$shapeEvent\",\n";
+            if ($nodeCount){
+            	$out .= "\t\t\t\"occurrences\" : \"$eventCount{$eventName}\",\n";
+        	}
 
             $eventId = get_node_id($event);
             $out .= "\t\t\t\"_id\": \"$eventId\",
@@ -1495,7 +1506,10 @@ foreach $targetName (keys %targetMap) {
     if (!$outputFormat || $outputFormat == 1){
         print $targetName;
     }
-    if ($nodeCount) { $target .= " : ".$targetCount{$targetName}; }
+
+    if ($outputFormat != 2){
+    	if ($nodeCount) { $target .= " : ".$targetCount{$targetName}; }
+	}
 
     if ($outputFormat == 1) {
 
@@ -1531,6 +1545,9 @@ foreach $targetName (keys %targetMap) {
             }
             $out .= "\t\t\t\"size\" : \"$size\",\n";
             $out .= "\t\t\t\"shape\" : \"$shapeTarget\",\n";
+            if ($nodeCount){
+            	$out .= "\t\t\t\"occurrences\" : \"$targetCount{$targetName}\",\n";
+        	}
 
             $targetId = get_node_id($target);
             $out .= "\t\t\t\"_id\": \"$targetId\",

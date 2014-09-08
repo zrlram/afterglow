@@ -3,6 +3,10 @@ AfterGlow
 
 Change Log
 ----------
+09/08/14     Version 1.6.5 - Two Node Mode
+             - If the first line of the input only has two columns,  twonode mode is set automatically
+             - The default edge length is now set to 1.5 instead of the old 3, which should make for 
+               more compact graphs by default
 07/08/13     Version 1.6.4 - GraphSON support
              - Adding GraphSON data format support for tools like Helios.js
                 -j       : on the command line

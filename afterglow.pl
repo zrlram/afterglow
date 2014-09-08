@@ -175,6 +175,9 @@
 #           -j on commandline
 #       Fixing size check for event nodes
 #
+# 1.6.5 If the first line of the data only contains TWO fields, twonode mode is set automatically
+#       Default edge length is now 1.5 not 3 anymore
+#
 ##############################################################
 
 # ------------------------------------------------------------
@@ -234,7 +237,7 @@ $targetLabel=1;
 $eventLabel=1;
 
 # default edge length
-my $edgelen = 3;
+my $edgelen = 1.5;
 
 # default label color
 my $labelColor = "black";
@@ -700,6 +703,9 @@ while (($lineCount < $skipLines + $maxLines) and $line = <STDIN>) {
     # Split the input into source, event and target.
     $csvline->parse($line);
     @fields = $csvline->fields();
+
+    # auto detect if there are only two columns - only on first row!
+    if ($lineCount==1 && scalar(@fields) == 2) {$twonodes=1;}
 
     if ($twonodes) {
         $source = $fields[0];

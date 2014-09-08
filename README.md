@@ -169,12 +169,3 @@ Change Log
 		- Introducing label.{source,event,target}=[0|1]
 		  to disable labels
 
-
-Graphing Scripts (afterglow/src/perl/graph)
-----------------
-
-This is where the AfterGlow 1.x scripts are located:
-
-afterglow-lgl.pl	(AfterGlow-LGL, generates LGL output)
-afterglow.pl		(AfterGlow, generates GraphViz output)
-color.properties	(Example color.properties file for AfterGlow)

@@ -7,6 +7,11 @@ Change Log
              - If the first line of the input only has two columns,  twonode mode is set automatically
              - The default edge length is now set to 1.5 instead of the old 3, which should make for 
                more compact graphs by default
+             - Added edge label capability for GDF and DOT output! (Not GraphSON yet)
+               label.edge=$fields[2]
+             - Can duplicate edges if they have multiple labels: (only for GDF!)
+               label.duplicate=1;
+               In DOT it will chose the FIRST label used for the edge!
 07/08/13     Version 1.6.4 - GraphSON support
              - Adding GraphSON data format support for tools like Helios.js
                 -j       : on the command line

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Copyright (c) 2013 by Raffael Marty and Christian Beedgen
+# Copyright (c) 2014 by Raffael Marty
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,16 +19,11 @@
 # Written by:    Christian Beedgen (krist@digitalresearch.org)
 #                Raffael Marty (ram@cryptojail.net)
 #
-# Version:    1.6.4
+# Version:    1.6.5
 #
-# URL:        http://afterglow.sourceforge.net
+# URL:        http://afterglow.sf.net
 #
 # Sample Usage:
-#         tcpdump -vttttnnelr /home/ram/defcon.07.31.10.14.tcpdump.1 |
-#         ./tcpdump2csv.pl "sip dip ttl" | ../graph/afterglow.pl
-#         -c /home/ram/color.defcon.properties -p 2 | neato -Tgif -o test.gif
-#
-# Okay, simpler:
 #         cat file.csv | perl afterglow.pl | neato -Tgif -o test.gif
 #
 # ChangeLog:
@@ -177,6 +172,11 @@
 #
 # 1.6.5 If the first line of the data only contains TWO fields, twonode mode is set automatically
 #       Default edge length is now 1.5 not 3 anymore
+#	Adding edge label capability for GDF and DOT output! (Not GraphSON yet)
+#           label.edge=$fields[2]
+#       Can duplicate edges if they have multiple labels: (only for GDF!)
+#           label.duplicate=1;
+#       In DOT it will chose the FIRST label used for the edge!
 #
 ##############################################################
 
@@ -189,7 +189,7 @@ use FindBin qw($Bin);
 use lib "$FindBin::Bin/.";
 
 # Program version
-my $version = "1.6.4";
+my $version = "1.6.5";
 
 use Text::CSV;
 my $csvline = Text::CSV->new();
@@ -202,7 +202,7 @@ my $verbose = 0;
 my $DEBUG = 0;
 
 # output format in GML or DOT?
-my $outputFormat = 0;
+my $outputFormat = 0;			# 0 DOT, 1 GDF, 2 GraphSON
 
 # use xlabels in output? On by default!
 my $xlabels = 1;
@@ -274,6 +274,9 @@ my $nodeCount = 0;
 
 # Edge Style
 my $edgeStyle = "solid";
+
+# Duplicate Edges? If set, if there are multiple labels for the same edge, the edge is duplicated
+my $duplicate_labels = 0;
 
 # Maximum Node Size, default is 0.2
 my $maxNodeSize = 0.2;
@@ -893,6 +896,13 @@ while (($lineCount < $skipLines + $maxLines) and $line = <STDIN>) {
     if (defined(@edgeSizeExp)) {
         $edgeSize{$sourceTargetLinkName} = getSize("edge",@fields);
     }
+    # Edge Label
+    if (defined(@edgeLabelExp)) {
+	my $temp = $edgeLabel{$sourceTargetLinkName};
+        my @foo = @$temp;
+        push(@foo, getLabel("edge",@fields)); 
+        $edgeLabel{$sourceTargetLinkName}=\@foo;
+    }
 
 
     } else {
@@ -908,6 +918,13 @@ while (($lineCount < $skipLines + $maxLines) and $line = <STDIN>) {
     if (defined(@edgeSizeExp)) {
         $edgeSize{$sourceEventLinkName} = getSize("edge",@fields);
     }
+    # Edge Label
+    if (defined(@edgeLabelExp)) {
+	my $temp = $edgeLabel{$sourceEventLinkName};
+        my @foo = @$temp;
+        push(@foo, getLabel("edge",@fields)); 
+        $edgeLabel{$sourceEventLinkName}=\@foo;
+    }
 
         $eventTargetLinkName = "$eventName $targetName";
         $eventTargetLinkMap{$eventTargetLinkName} = $eventTargetLinkName;
@@ -919,6 +936,13 @@ while (($lineCount < $skipLines + $maxLines) and $line = <STDIN>) {
     # Edge Size
     if (defined(@edgeSizeExp)) {
         $edgeSize{$eventTargetLinkName} = getSize("edge",@fields);
+    }
+    # Edge Label
+    if (defined(@edgeLabelExp)) {
+	my $temp = $edgeLabel{$eventTargetLinkName};
+        my @foo = @$temp;
+        push(@foo, getLabel("edge",@fields)); 
+        $edgeLabel{$eventTargetLinkName}=\@foo;
     }
 
     }
@@ -964,15 +988,30 @@ if ($twonodes) {
         if (defined(@edgeSizeExp)) {
             $size = $edgeSize{$sourceTargetLinkName};
         }
+	
+	# Label
+	my $label = ();
+        if (defined(@edgeLabelExp)) {
+            $label = $edgeLabel{$sourceTargetLinkName};
+        }
+
 
         # print STDERR "size: $size / color: $color / output format: $outputFormat\n";
 
         # Source -> target link.
 
-        if ($outputFormat == 1) {
+        if ($outputFormat == 1) {	# GDF
             if ($size == 0) { $size = 1; }
-            $edge_output .= "$sourceName,$targetName,true,".rgb($color).",$size\n";
-        } elsif ($outputFormat == 2) {
+	    if (defined($label)) {
+                foreach(@$label) {
+                    $edge_output .= "$sourceName,$targetName,true,".rgb($color).",$size,\"$_\",true\n";
+                }
+
+	    } else {
+                $edge_output .= "$sourceName,$targetName,true,".rgb($color).",$size\n";
+            }
+
+        } elsif ($outputFormat == 2) {	# GraphSON
             if ($is_first_edge){
                 $is_first_edge = 0;
                 $edge_output .= "";
@@ -1004,12 +1043,15 @@ if ($twonodes) {
             $edge_output .= "\n\t\t}";
 
         } else {
+	    # DOT output
             $edge_output .= "$sourceName -> $targetName";
-            if ($size || $color) {
-                $edge_output .= "[";
+            if ($size || $color || $label) {
+                $edge_output .= " [";
                 if (defined($color)) { $edge_output .= "color=$color, style=$edgeStyle";}
                 if (defined($color) && $size>0) { $edge_output .= ","; }
                 if ($size>0) { $edge_output .= "penwidth=$size"; }
+                if ((defined($color) || $size>0) && defined($label)) { $edge_output .= ","; }
+                if (defined($label)) { $edge_output .= "label=\"@$label[0]\""; }
                 $edge_output .= "]";
             }
             $edge_output .= "\n";
@@ -1068,11 +1110,23 @@ if ($twonodes) {
             # print STDERR "size: $size / color: $color\n";
         }
 
+	# Label
+	my $label = ();
+        if (defined(@edgeLabelExp)) {
+            $label = $edgeLabel{$sourceEventLinkName};
+        }
+
         # Source -> Event link.
 
         if ($outputFormat == 1) {
             if ($size == 0) { $size = 1; }
-            $edge_output .= "$sourceName,$eventName,true,".rgb($color).",$size\n";
+            if (defined($label)) {
+                foreach(@$label) {
+                    $edge_output .= "$sourceName,$eventName,true,".rgb($color).",$size,\"$_\",true\n";
+                }
+            } else {
+                $edge_output .= "$sourceName,$eventName,true,".rgb($color).",$size\n";
+	    }
         } elsif($outputFormat == 2) {
             if ($is_first_edge){
                 $is_first_edge = 0;
@@ -1102,11 +1156,13 @@ if ($twonodes) {
             $edge_output .= "\n\t\t}";
         }else {
             $edge_output .= "$sourceName -> $eventName";
-            if ($size || $color) {
+            if ($size || $color || $label) {
                 $edge_output .= " [";
                 if (defined($color)) { $edge_output .= "color=$color,style=$edgeStyle";}
                 if (defined($color) && $size>0) { $edge_output .= ","; }
                 if ($size>0) { $edge_output .= "penwidth=$size"; }
+                if ((defined($color) || $size>0) && defined($label)) { $edge_output .= ","; }
+                if (defined($label)) { $edge_output .= "label=\"@$label[0]\""; }
                 $edge_output .= "];";
             }
             $edge_output .= "\n";
@@ -1157,14 +1213,26 @@ if ($twonodes) {
             $size = $edgeSize{$eventTargetLinkName};
         }
 
+	# Label
+	my $label = ();
+        if (defined(@edgeLabelExp)) {
+            $label = $edgeLabel{$eventTargetLinkName};
+        }
+
         # print STDERR "size: $size / color: $color\n";
 
         # Event -> Target link.
 
-        if ($outputFormat == 1) {
+        if ($outputFormat == 1) {		# GDF
             if ($size == 0) { $size = 1; }
-            $edge_output .= "$eventName,$targetName,true,".rgb($color).",$size\n";
-        } elsif ($outputFormat == 2) {
+            if (defined($label)) {
+                foreach(@$label) {
+                    $edge_output .= "$eventName,$targetName,true,".rgb($color).",$size,\"$_\",true\n";
+                }
+            } else {
+                $edge_output .= "$eventName,$targetName,true,".rgb($color).",$size\n";
+	    }
+        } elsif ($outputFormat == 2) {		# GraphSON
             if ($is_first_edge){
                 $is_first_edge = 0;
             } else {
@@ -1194,13 +1262,15 @@ if ($twonodes) {
 
             $edge_output .= "\n\t\t}";
 
-        }else {
+        }else {		# DOT
             $edge_output .= "$eventName -> $targetName";
-            if ($size || $color) {
+            if ($size || $color || $label) {
                 $edge_output .= " [";
                 if (defined($color)) { $edge_output .= "color=$color,style=$edgeStyle";}
                 if (defined($color) && $size>0) { $edge_output .= ","; }
                 if ($size>0) { $edge_output .= "penwidth=$size"; }
+                if ((defined($color) || $size>0) && defined($label)) { $edge_output .= ","; }
+                if (defined($label)) { $edge_output .= "label=\"@$label[0]\""; }
                 $edge_output .= "];";
             }
             $edge_output .= "\n";
@@ -1592,7 +1662,11 @@ foreach $targetName (keys %targetMap) {
 # now that the nodes have been printed, print the edges.
 my $is_first_edge = 1;
 if ($outputFormat == 1) {
-    print "edgedef>node1 VARCHAR,node2 VARCHAR,directed BOOLEAN,color VARCHAR,weight DOUBLE\n";
+    print "edgedef>node1 VARCHAR,node2 VARCHAR,directed BOOLEAN,color VARCHAR,weight DOUBLE";
+    if (defined(@edgeLabelExp)) {
+	print ",label VARCHAR,labelvisible BOOLEAN";
+    }
+    print "\n";
 } elsif ($outputFormat == 2){
     print "\n\t],\n\t\"edges\" : [\n";
 }
@@ -2169,6 +2243,12 @@ sub propertyfile() {
             }
         elsif ($name eq "size.edge") {
             push (@edgeSizeExp,$value);
+            }
+	elsif ($name eq "label.edge") {
+            push (@edgeLabelExp,$value);
+	    }
+        elsif ($name eq "label.duplicate") {
+            eval {$duplicate_labels = $value;};
             }
         elsif ($name eq "threshold") {
             $omitThreshold = $value;

@@ -667,7 +667,7 @@ if ($label && !$outputFormat) {
 
 my $options = "";
 
-if (defined(@sourceSizeExp) || defined(@eventSizeExp) || defined(@targetSizeExp)) {
+if (@sourceSizeExp || @eventSizeExp || @targetSizeExp) {
     $options = ", fixedsize=true";
 }
 
@@ -813,7 +813,7 @@ while (($lineCount < $skipLines + $maxLines) and $line = <STDIN>) {
     }
 
     # calculate the size of the node
-    if (defined(@sourceSizeExp)) {
+    if (@sourceSizeExp) {
         # calculate the size of the node. Add to existing value to take care of
         # source/target nodes and nodes showing up multiple times
         if ($sumSource) {
@@ -846,7 +846,7 @@ while (($lineCount < $skipLines + $maxLines) and $line = <STDIN>) {
 
         # calculate the size of the node. Add to existing value to take care of
         # source/target nodes and nodes showing up multiple times
-        if (defined(@eventSizeExp)) {
+        if (@eventSizeExp) {
                 if ($sumEvent) {
                 $eventNodeSize{$eventName} += getSize("event",@fields);
             } else {
@@ -866,7 +866,7 @@ while (($lineCount < $skipLines + $maxLines) and $line = <STDIN>) {
     } else {
         $targetMap{$targetName} = $target;
     }
-    if (defined(@targetSizeExp)) {
+    if (@targetSizeExp) {
         if ($sumTarget) {
             $targetNodeSize{$targetName} += getSize("target",@fields);
         } else {
@@ -889,15 +889,15 @@ while (($lineCount < $skipLines + $maxLines) and $line = <STDIN>) {
         $sourceTargetLinkMap{$sourceTargetLinkName} = $sourceTargetLinkName;
 
         # Edge Color
-    if (defined(@edgeColorExp)) {
+    if (@edgeColorExp) {
         $edgeColor{$sourceTargetLinkName} = getColor("edge",@fields);
     }
     # Edge Size
-    if (defined(@edgeSizeExp)) {
+    if (@edgeSizeExp) {
         $edgeSize{$sourceTargetLinkName} = getSize("edge",@fields);
     }
     # Edge Label
-    if (defined(@edgeLabelExp)) {
+    if (@edgeLabelExp) {
 	my $temp = $edgeLabel{$sourceTargetLinkName};
         my @foo = @$temp;
         push(@foo, getLabel("edge",@fields)); 
@@ -911,15 +911,15 @@ while (($lineCount < $skipLines + $maxLines) and $line = <STDIN>) {
         $sourceEventLinkMap{$sourceEventLinkName} = $sourceEventLinkName;
 
         # Edge Color
-    if (defined(@edgeColorExp)) {
+    if (@edgeColorExp) {
         $edgeColor{$sourceEventLinkName} = getColor("edge",@fields);
     }
     # Edge Size
-    if (defined(@edgeSizeExp)) {
+    if (@edgeSizeExp) {
         $edgeSize{$sourceEventLinkName} = getSize("edge",@fields);
     }
     # Edge Label
-    if (defined(@edgeLabelExp)) {
+    if (@edgeLabelExp) {
 	my $temp = $edgeLabel{$sourceEventLinkName};
         my @foo = @$temp;
         push(@foo, getLabel("edge",@fields)); 
@@ -930,15 +930,15 @@ while (($lineCount < $skipLines + $maxLines) and $line = <STDIN>) {
         $eventTargetLinkMap{$eventTargetLinkName} = $eventTargetLinkName;
 
         # Edge Color
-    if (defined(@edgeColorExp)) {
+    if (@edgeColorExp) {
         $edgeColor{$eventTargetLinkName} = getColor("edge",@fields);
     }
     # Edge Size
-    if (defined(@edgeSizeExp)) {
+    if (@edgeSizeExp) {
         $edgeSize{$eventTargetLinkName} = getSize("edge",@fields);
     }
     # Edge Label
-    if (defined(@edgeLabelExp)) {
+    if (@edgeLabelExp) {
 	my $temp = $edgeLabel{$eventTargetLinkName};
         my @foo = @$temp;
         push(@foo, getLabel("edge",@fields)); 
@@ -979,19 +979,19 @@ if ($twonodes) {
 
         # Color
         my $color = ();
-        if (defined(@edgeColorExp)) {
+        if (@edgeColorExp) {
             $color = $edgeColor{$sourceTargetLinkName};
         }
 
         # Size
         my $size = 0;
-        if (defined(@edgeSizeExp)) {
+        if (@edgeSizeExp) {
             $size = $edgeSize{$sourceTargetLinkName};
         }
 	
 	# Label
 	my $label = ();
-        if (defined(@edgeLabelExp)) {
+        if (@edgeLabelExp) {
             $label = $edgeLabel{$sourceTargetLinkName};
         }
 
@@ -1098,13 +1098,13 @@ if ($twonodes) {
 
         # Color
         my $color = ();
-        if (defined(@edgeColorExp)) {
+        if (@edgeColorExp) {
             $color = $edgeColor{$sourceEventLinkName};
         }
 
         # Size
         my $size = 0;
-        if (defined(@edgeSizeExp)) {
+        if (@edgeSizeExp) {
             $size = $edgeSize{$sourceEventLinkName};
 
             # print STDERR "size: $size / color: $color\n";
@@ -1112,7 +1112,7 @@ if ($twonodes) {
 
 	# Label
 	my $label = ();
-        if (defined(@edgeLabelExp)) {
+        if (@edgeLabelExp) {
             $label = $edgeLabel{$sourceEventLinkName};
         }
 
@@ -1203,19 +1203,19 @@ if ($twonodes) {
 
         # Color
         my $color = ();
-        if (defined(@edgeColorExp)) {
+        if (@edgeColorExp) {
             $color = $edgeColor{$eventTargetLinkName};
         }
 
         # Size
         my $size = 0;
-        if (defined(@edgeSizeExp)) {
+        if (@edgeSizeExp) {
             $size = $edgeSize{$eventTargetLinkName};
         }
 
 	# Label
 	my $label = ();
-        if (defined(@edgeLabelExp)) {
+        if (@edgeLabelExp) {
             $label = $edgeLabel{$eventTargetLinkName};
         }
 
@@ -1324,11 +1324,11 @@ foreach $sourceName (keys %sourceMap) {
 
     # Assign differnet color to a node which is a source and target at the same time?
     if ($targetMap{$sourceName}) {
-        if (defined(@sourcetargetColorExp)) {
+        if (@sourcetargetColorExp) {
             $sourceColor = $sourcetargetColorMap{$sourceName};
         } else {
             # print the node already here instead of in the target section
-            if (defined(@sourceColorExp)) {
+            if (@sourceColorExp) {
                 $sourceColor = $sourceColorMap{$sourceName};
             } else {
                 $sourceColor = $targetColorMap{$sourceName};
@@ -1366,7 +1366,7 @@ foreach $sourceName (keys %sourceMap) {
 
         # size of node
         my $size=1;
-        if (defined(@sourceSizeExp)) {
+        if (@sourceSizeExp) {
             $size = sprintf ("%.2f",($maxNodeSize / $maxActualSourceNodeSize) * $sourceNodeSize{$sourceName});
         }
         print ",$size";
@@ -1389,7 +1389,7 @@ foreach $sourceName (keys %sourceMap) {
             }
 
             my $size=1;
-            if (defined(@sourceSizeExp)) {
+            if (@sourceSizeExp) {
                 $size = sprintf ("%.2f",($maxNodeSize / $maxActualSourceNodeSize) * $sourceNodeSize{$sourceName});
             }
             $out .= "\t\t\t\"size\" : \"$size\",\n";
@@ -1412,7 +1412,7 @@ foreach $sourceName (keys %sourceMap) {
         my $out = " [fillcolor=$sourceColor, $ll";
 
         # size of node
-        if (defined(@sourceSizeExp)) {
+        if (@sourceSizeExp) {
             #print STDERR "MaxActualSize: $maxActualSourceNodeSize maxNodeSize: $maxNodeSize currentSize: $sourceNodeSize{$sourceName}\n";
             my $size=0;
             $size = sprintf ("%.2f",($maxNodeSize / $maxActualSourceNodeSize) * $sourceNodeSize{$sourceName});
@@ -1486,7 +1486,7 @@ unless ($twonodes) {
 
             # size of node
             my $size=1;
-            if (defined(@eventSizeExp)) {
+            if (@eventSizeExp) {
                 $size = sprintf ("%.2f",($maxNodeSize / $maxActualEventNodeSize) * $eventNodeSize{$eventName});
             }
             print ",$size";
@@ -1509,7 +1509,7 @@ unless ($twonodes) {
             }
 
             my $size=1;
-            if (defined(@eventSizeExp)) {
+            if (@eventSizeExp) {
                 $size = sprintf ("%.2f",($maxNodeSize / $maxActualEventNodeSize) * $eventNodeSize{$eventName});
             }
             $out .= "\t\t\t\"size\" : \"$size\",\n";
@@ -1532,7 +1532,7 @@ unless ($twonodes) {
             my $out = " [shape=box, fillcolor=$eventColor, $ll";
 
             # size of node
-            if (defined(@eventSizeExp)) {
+            if (@eventSizeExp) {
                 my $size=0;
                 $size = sprintf ("%.2f",($maxNodeSize / $maxActualEventNodeSize) * $eventNodeSize{$eventName});
                 $out .= ",width=\"$size\"";
@@ -1593,7 +1593,7 @@ foreach $targetName (keys %targetMap) {
 
         # size of node
         my $size=1;
-        if (defined(@targetSizeExp)) {
+        if (@targetSizeExp) {
             $size = sprintf ("%.2f",($maxNodeSize / $maxActualTargetNodeSize) * $targetNodeSize{$targetName});
         }
         print ",$size";
@@ -1616,7 +1616,7 @@ foreach $targetName (keys %targetMap) {
             }
 
             my $size=1;
-            if (defined(@targetSizeExp)) {
+            if (@targetSizeExp) {
                 $size = sprintf ("%.2f",($maxNodeSize / $maxActualTargetNodeSize) * $targetNodeSize{$targetName});
             }
             $out .= "\t\t\t\"size\" : \"$size\",\n";
@@ -1639,7 +1639,7 @@ foreach $targetName (keys %targetMap) {
         my $out = " [fillcolor=$targetColor, $ll";
 
         # size of node
-        if (defined(@targetSizeExp)) {
+        if (@targetSizeExp) {
             # print STDERR "MaxActualSize: $maxActualTargetNodeSize maxNodeSize: $maxNodeSize currentSize: $targetNodeSize{$targetName} targetName: $targetName\n";
             my $size=0;
             $size = sprintf ("%.2f",($maxNodeSize / $maxActualTargetNodeSize) * $targetNodeSize{$targetName});
@@ -1663,7 +1663,7 @@ foreach $targetName (keys %targetMap) {
 my $is_first_edge = 1;
 if ($outputFormat == 1) {
     print "edgedef>node1 VARCHAR,node2 VARCHAR,directed BOOLEAN,color VARCHAR,weight DOUBLE";
-    if (defined(@edgeLabelExp)) {
+    if (@edgeLabelExp) {
 	print ",label VARCHAR,labelvisible BOOLEAN";
     }
     print "\n";

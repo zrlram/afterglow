@@ -177,6 +177,8 @@
 #       Can duplicate edges if they have multiple labels: (only for GDF!)
 #           label.duplicate=1;
 #       In DOT it will chose the FIRST label used for the edge!
+# 1.6.6 Bugs
+#       Color definitions liket his wouldn't work: color.edge=#22222270
 #
 ##############################################################
 
@@ -1281,7 +1283,7 @@ if ($twonodes) {
 
     } else {
 
-        # Probelm Number 1: if the eventNode or the targetNode is not displayed for
+        # Problem Number 1: if the eventNode or the targetNode is not displayed for
         # some reason, we have to check that the sourceNode that belongs to these guys
         # still has neighbors! Otherwise it has to be eliminated as well!
         # This scenario is taken care of in the next section...
@@ -2184,7 +2186,7 @@ sub propertyfile() {
         chomp $ln;
         next if ($ln =~ /^\s*#/); # ignore comments
         next if ($ln =~ /^\s*$/); # ignore empty lines
-        $ln =~ s/[^"]#.*$//;    # Remove line comments in the properties file.
+        $ln =~ s/[^"=]#.*$//;    # Remove line comments in the properties file.
         @nv = split /\s*=/,$ln,2;
         $value = $nv[1];
         $value =~ s/^\s*=?\s*//;

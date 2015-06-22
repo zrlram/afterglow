@@ -19,7 +19,7 @@
 # Written by:    Christian Beedgen (krist@digitalresearch.org)
 #                Raffael Marty (ram@cryptojail.net)
 #
-# Version:    1.6.5
+# Version:    1.6.6
 #
 # URL:        http://afterglow.sf.net
 #
@@ -178,7 +178,11 @@
 #           label.duplicate=1;
 #       In DOT it will chose the FIRST label used for the edge!
 # 1.6.6 Bugs
-#       Color definitions liket his wouldn't work: color.edge=#22222270
+#       - Color definitions like this wouldn't work: color.edge=#22222270
+#       Features
+#       - Set concentrate=1 to draw bi-directional edges in DOT 
+#       - -t assigned meta fields wrong
+#       - RGB color parsing error in GDF output
 #
 ##############################################################
 
@@ -189,9 +193,10 @@
 # include the lib directory right here for Text::CSV
 use FindBin qw($Bin);
 use lib "$FindBin::Bin/.";
+use List::Util qw[min max];
 
 # Program version
-my $version = "1.6.5";
+my $version = "1.6.6";
 
 use Text::CSV;
 my $csvline = Text::CSV->new();
@@ -247,6 +252,9 @@ my $labelColor = "black";
 # default edge size
 my $defaultEdgeSize = 1;
 
+# minimum node size
+my $minNodeSize = 0.1;
+
 # invisible color
 my $invisibleColor = "invisible";
 
@@ -291,6 +299,8 @@ my $maxActualEventNodeSize = 1;
 my $sumSource = 0;
 my $sumTarget = 0;
 my $sumEvent = 0;
+
+my $concentrate = 1;
 
 my $shapeSource = "ellipse";
 my $shapeTarget = "ellipse";
@@ -681,6 +691,7 @@ if ($url) {
 if (!$outputFormat) {
     print "node [shape=ellipse, style=filled, penwidth=0, fontsize=10, width=$maxNodeSize, height=$maxNodeSize, fontcolor=\"$labelColor\", label=\"\" $options];\n";
     print "edge [len=$edgelen];\n";
+    if ($concentrate) { print "concentrate=true;\n"; }
 }
 
 # The line counter.
@@ -717,7 +728,7 @@ while (($lineCount < $skipLines + $maxLines) and $line = <STDIN>) {
         $target = $fields[1];
         $meta1 = $fields[2];
         $meta2 = $fields[3];
-        print STDERR "====> Processing: $source -> $target\n" if $verbose;
+        print STDERR "====> Processing: $source -> $target : $meta1 : $meta2\n" if $verbose;
     }
     else {
         $source = $fields[0];
@@ -758,7 +769,7 @@ while (($lineCount < $skipLines + $maxLines) and $line = <STDIN>) {
         # Wow... UGLY. BUT: If you are using a -t option on a three-column input,
         # you might want to use the third column to steer some kind of property (size, etc.)
         # In order for that to work, we need to add this value back here ;)
-        @fields=($source,$target,$fields[2],$meta1,$meta2);
+        @fields=($source,$target,$meta1,$meta2);
     } else {
         @fields=($source,$event,$target,$meta1,$meta2);
     }
@@ -1369,7 +1380,8 @@ foreach $sourceName (keys %sourceMap) {
         # size of node
         my $size=1;
         if (@sourceSizeExp) {
-            $size = sprintf ("%.2f",($maxNodeSize / $maxActualSourceNodeSize) * $sourceNodeSize{$sourceName});
+            #print STDERR "MaxActualSize: $maxActualSourceNodeSize maxNodeSize: $maxNodeSize currentSize: $sourceNodeSize{$sourceName} minNodeSize: $minNodeSize ";
+            $size = sprintf ("%.2f",max (($maxNodeSize / $maxActualSourceNodeSize) * $sourceNodeSize{$sourceName},$minNodeSize));
         }
         print ",$size";
         print ",$size";
@@ -1392,7 +1404,7 @@ foreach $sourceName (keys %sourceMap) {
 
             my $size=1;
             if (@sourceSizeExp) {
-                $size = sprintf ("%.2f",($maxNodeSize / $maxActualSourceNodeSize) * $sourceNodeSize{$sourceName});
+                $size = sprintf ("%.2f",max (($maxNodeSize / $maxActualSourceNodeSize) * $sourceNodeSize{$sourceName}, $minNodeSize));
             }
             $out .= "\t\t\t\"size\" : \"$size\",\n";
             $out .= "\t\t\t\"shape\" : \"$shapeSource\",\n";
@@ -1415,9 +1427,8 @@ foreach $sourceName (keys %sourceMap) {
 
         # size of node
         if (@sourceSizeExp) {
-            #print STDERR "MaxActualSize: $maxActualSourceNodeSize maxNodeSize: $maxNodeSize currentSize: $sourceNodeSize{$sourceName}\n";
-            my $size=0;
-            $size = sprintf ("%.2f",($maxNodeSize / $maxActualSourceNodeSize) * $sourceNodeSize{$sourceName});
+            # print STDERR "MaxActualSize: $maxActualSourceNodeSize maxNodeSize: $maxNodeSize currentSize: $sourceNodeSize{$sourceName} minNodeSize: $minNodeSize\n";
+            my $size = sprintf ("%.2f",max (($maxNodeSize / $maxActualSourceNodeSize) * $sourceNodeSize{$sourceName}, $minNodeSize));
             $out .= ",width=\"$size\"";
             $out .= ",height=\"$size\"";
         }
@@ -1489,7 +1500,7 @@ unless ($twonodes) {
             # size of node
             my $size=1;
             if (@eventSizeExp) {
-                $size = sprintf ("%.2f",($maxNodeSize / $maxActualEventNodeSize) * $eventNodeSize{$eventName});
+                $size = sprintf ("%.2f",max (($maxNodeSize / $maxActualEventNodeSize) * $eventNodeSize{$eventName},$minNodeSize));
             }
             print ",$size";
             print ",$size";
@@ -1512,7 +1523,7 @@ unless ($twonodes) {
 
             my $size=1;
             if (@eventSizeExp) {
-                $size = sprintf ("%.2f",($maxNodeSize / $maxActualEventNodeSize) * $eventNodeSize{$eventName});
+                $size = sprintf ("%.2f",max (($maxNodeSize / $maxActualEventNodeSize) * $eventNodeSize{$eventName},$minNodeSize));
             }
             $out .= "\t\t\t\"size\" : \"$size\",\n";
             $out .= "\t\t\t\"shape\" : \"$shapeEvent\",\n";
@@ -1536,7 +1547,7 @@ unless ($twonodes) {
             # size of node
             if (@eventSizeExp) {
                 my $size=0;
-                $size = sprintf ("%.2f",($maxNodeSize / $maxActualEventNodeSize) * $eventNodeSize{$eventName});
+                $size = sprintf ("%.2f",max (($maxNodeSize / $maxActualEventNodeSize) * $eventNodeSize{$eventName},$minNodeSize));
                 $out .= ",width=\"$size\"";
                 $out .= ",height=\"$size\"";
             }
@@ -1596,7 +1607,7 @@ foreach $targetName (keys %targetMap) {
         # size of node
         my $size=1;
         if (@targetSizeExp) {
-            $size = sprintf ("%.2f",($maxNodeSize / $maxActualTargetNodeSize) * $targetNodeSize{$targetName});
+            $size = sprintf ("%.2f",max (($maxNodeSize / $maxActualTargetNodeSize) * $targetNodeSize{$targetName},$minNodeSize));
         }
         print ",$size";
         print ",$size";
@@ -1619,7 +1630,7 @@ foreach $targetName (keys %targetMap) {
 
             my $size=1;
             if (@targetSizeExp) {
-                $size = sprintf ("%.2f",($maxNodeSize / $maxActualTargetNodeSize) * $targetNodeSize{$targetName});
+                $size = sprintf ("%.2f",max (($maxNodeSize / $maxActualTargetNodeSize) * $targetNodeSize{$targetName},$minNodeSize));
             }
             $out .= "\t\t\t\"size\" : \"$size\",\n";
             $out .= "\t\t\t\"shape\" : \"$shapeTarget\",\n";
@@ -1642,9 +1653,9 @@ foreach $targetName (keys %targetMap) {
 
         # size of node
         if (@targetSizeExp) {
-            # print STDERR "MaxActualSize: $maxActualTargetNodeSize maxNodeSize: $maxNodeSize currentSize: $targetNodeSize{$targetName} targetName: $targetName\n";
+            # print STDERR "MaxActualSize: $maxActualTargetNodeSize maxNodeSize: $maxNodeSize currentSize: $targetNodeSize{$targetName} targetName: $targetName minNodeSize: $minNodeSize\n";
             my $size=0;
-            $size = sprintf ("%.2f",($maxNodeSize / $maxActualTargetNodeSize) * $targetNodeSize{$targetName});
+            $size = sprintf ("%.2f",max (($maxNodeSize / $maxActualTargetNodeSize) * $targetNodeSize{$targetName},$minNodeSize));
             $out .= ",width=\"$size\"";
             $out .= ",height=\"$size\"";
         }
@@ -1699,6 +1710,11 @@ print STDERR "\n\nAll over, buster.\n" if $verbose;
 sub rgb {
     my ($col) = @_;
     my $rgb;
+    # parse out the quotes and # signs!
+    if ($col =~ s/^\"?#*([\da-fA-F]{6,8})\"?$/\1/) { 
+        my @rgb = map $_, unpack 'C*', pack 'H*', $col;
+        return "'$rgb[0],$rgb[1],$rgb[2]'"
+    }
     if (!$col) { return $defaultColor; }
     $ret = $color_to_rgb_map{$col};
     if (!$ret) { print STDERR "ERROR: no RGB value found for color: $col\n";}
@@ -1989,17 +2005,20 @@ sub getColor {
 
     if ($notCatchAllColor{$type.$globalField}) {
         # print STDERR "$type :: $globalField\n";
+        print STDERR " | notCatchAll\n" if $DEBUG;
         return $notCatchAllColor{$type.$globalField};
     }
 
     for my $var (@$variableColExp) {
         print STDERR " | eval: $var" if $DEBUG;
-        print STDERR " | field(): ".field() if $DEBUG;
+        print STDERR " | field(): ".field() if $DEBUG and ($type ne "edge");
 
-        if ($var =~ /^#[\da-fA-F]{6,8}$/) {
+        # for some reason, the expression #333333 by itself doesn't evaluate and color is going to be NULL
+        if ($var =~ /^\"?#[\da-fA-F]{6,8}\"?$/) {
             $color = $var;
             last;
-        } elsif ($color = eval($var)) {
+        }
+        elsif ($color = eval($var)) {
             # check whether the assignment happened in a "catch-all" condition, which can
             # be identified by not having a "if" in the statement.
             # if ($type eq "target") {print STDERR "eval: $var :: $fields[1]\n";}
@@ -2068,6 +2087,8 @@ sub getSize {
          if ($type eq "target") {$globalField=$fields[2];}
     }
 
+    # print STDERR "YO: ".$fields[2].$fields[3];
+
     $variableSizeExp = $type."SizeExp";
     my $size=0;
 
@@ -2075,7 +2096,6 @@ sub getSize {
         # print STDERR "$type :: $globalField\n";
         return $notCatchAllSize{$type.$globalField};
     }
-
     for my $var (@$variableSizeExp) {
         if ($size = eval($var)) {
             # check whether the assignment happened in a "catch-all" condition, which can
@@ -2311,6 +2331,13 @@ sub propertyfile() {
                 print STDERR "Property File Error, unrecognized value for sum.event: $value, line $line\n";
             } else {
                 $sumEvent=$value;
+            }
+        }
+        elsif ($name eq "concentrate") {
+            if ($value !~ /^[01];?$/) {
+                print STDERR "Property File Error, unrecognized value for concentrate: $value, line $line\n";
+            } else {
+                $concentrate=$value;
             }
         }
         elsif ($name eq "label") {

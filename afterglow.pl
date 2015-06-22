@@ -39,7 +39,7 @@
 #         setting them per node type. Also if no label is applied, the node
 #         should be smaller
 #         Making event nodes smaller by default
-# 1.3        Adding capability to define colors independant
+# 1.3        Adding capability to define colors independent
 #         of the node (color=...)
 #        Introducing label.{source,event,targate}=[0|1] to disable labels
 # 1.4        Clustering Nodes together into one cluster
@@ -54,11 +54,11 @@
 #        a higher threshold, not just one of them.
 # 1.5        Adding GNU license. Finally!
 #         Playing with fan-out filtering (introducing -f and -g command line switches)
-#        Indicating line number where error occured in property file
+#        Indicating line number where error occurred in property file
 #        Adding "exit" property file entry to stop processing
 #        Fixing property file parsing to be more flexible (bug in regex: s to \s)
 #        Fixing annoyance with "no color assigned" errors, assign default colors
-#        if not explicitely set in property file.
+#        if not explicitly set in property file.
 # 1.5.1        Making parsing of property file a bit more flexible
 #        Adding subnet() function
 #        Adding field() function, returning the current field value
@@ -68,7 +68,7 @@
 #        Don't evaluate clusters, if no clusters defined.
 #        Trying to do some code optimization by checking whether
 #          a certain feature is needed
-#        Doing some optimization by intorudcing a color cache! MUCH faster!
+#        Doing some optimization by introducing a color cache! MUCH faster!
 #        TBD: Introduce a cluster cache!
 #        TBD: Are there variables that can be omitted by using others?
 # 1.5.2        There was a bug for the event fan out threshold which would cause
@@ -108,7 +108,7 @@
 #        Updated the link to the graphviz project.
 #        Coloring bug with source/target nodes
 #            Along the way I changed the semantics a bit:
-#            - source color wins over target color for sourc/target nodes,
+#            - source color wins over target color for source/target nodes,
 #              if the source/target color is not set!
 #            - "color" wins over source and target color for source/target nodes, if
 #              the source/target color is not set!
@@ -124,7 +124,7 @@
 #            If you are using [0|1] it turns labels on or off. Otherwise it uses the
 #            expression as the label
 #        New is also that you can define "label" which defines the label for all the nodes
-# 1.6.0  If you had quote around the shape value, it would not recignize it. Fixed.
+# 1.6.0  If you had quote around the shape value, it would not recognize it. Fixed.
 #         label.(source|event|target)=0 now turns off labels for real.
 #        Adding edge thickness:
 #            size.edge=<perl returning integer>
@@ -139,7 +139,7 @@
 #           color.source=get_severity($fields[2])
 #           color.source=get_severity($fields[0],20)
 #           Second, optional argument, is for the maximum number of steps. The highest
-#           severity is red, the lowest is green, the ones inbetween shades.
+#           severity is red, the lowest is green, the ones in between shades.
 # 1.6.1  Patch from Paul Halliday:
 #        Adding new shape: Mrecord
 #        Adding new meta information. You can now input 5 columns where the last two or three
@@ -153,7 +153,7 @@
 #        Changed the order that edges and nodes are output. Because of the GDF format, we first
 #        process the edges and then output the nodes and then after hat output the edges. DOT does
 #        not care about the oder, but GDF does, so we change the output sequence. We cannot
-#        reorder the code for nodes and egdes as the nodes depend on variables that are computed
+#        reorder the code for nodes and edges as the nodes depend on variables that are computed
 #        by the edges, so we cache the data
 # 1.6.3  Fixing a couple of issues.
 #           color.source="#222222" wasn't working
@@ -179,10 +179,11 @@
 #       In DOT it will chose the FIRST label used for the edge!
 # 1.6.6 Bugs
 #       - Color definitions like this wouldn't work: color.edge=#22222270
-#       Features
-#       - Set concentrate=1 to draw bi-directional edges in DOT 
 #       - -t assigned meta fields wrong
 #       - RGB color parsing error in GDF output
+#       - minor spelling and grammar corrections by James Pittman
+#       Features
+#       - Set concentrate=1 to draw bi-directional edges in DOT 
 #
 ##############################################################
 
@@ -261,7 +262,7 @@ my $invisibleColor = "invisible";
 # default color for GDF format
 my $defaultColor = "'100,100,100'";
 
-# Ommit node-count. 1 means that every node with a count of 1 or smaller is not drawn!
+# Omit node-count. 1 means that every node with a count of 1 or smaller is not drawn!
 my $omitThreshold = 0;
 my $sourceThreshold = 0;
 my $targetThreshold = 0;
@@ -643,8 +644,8 @@ our (@sourceLabelExp,@targetLabelExp,@eventLabelExp);
 our (%sourceCount, %eventCount, %targetCount);
 our %sourceFanOut = {};
 our %eventFanOut = {};
-# if fan out threshold are used, this hash is used to keep track of th enodes
-# that need to be printed. Otherwise there are orphand nodes lingering in the graph
+# if fan out threshold are used, this hash is used to keep track of the nodes
+# that need to be printed. Otherwise there are orphaned nodes lingering in the graph
 our %printNode = {};
 
 # need this for the property functions
@@ -713,7 +714,7 @@ while (($lineCount < $skipLines + $maxLines) and $line = <STDIN>) {
        print STDERR "\rLines read so far: $lineCount. Skipped: $skippedLines. Processed: $processedLines";
     }
 
-    # Are we still suppoed to skip lines?
+    # Are we still supposed to skip lines?
     next if $lineCount < $skipLines;
 
     # Split the input into source, event and target.
@@ -962,7 +963,7 @@ while (($lineCount < $skipLines + $maxLines) and $line = <STDIN>) {
 
 }
 
-# We are done with all the book kepping, output everything we learned
+# We are done with all the book keeping, output everything we learned
 
 # First work on the edges (don't print, but remember)
 my $is_first_edge = 1;
@@ -1335,7 +1336,7 @@ foreach $sourceName (keys %sourceMap) {
         next;
     }
 
-    # Assign differnet color to a node which is a source and target at the same time?
+    # Assign different color to a node which is a source and target at the same time?
     if ($targetMap{$sourceName}) {
         if (@sourcetargetColorExp) {
             $sourceColor = $sourcetargetColorMap{$sourceName};
@@ -2369,7 +2370,7 @@ sub propertyfile() {
             } elsif ($name eq "cluster.target") {
                 push (@target_clusters,$value);
             } else {
-                print STDERR "Property File Error, unrecongnized name for cluster: $name, line $line\n";
+                print STDERR "Property File Error, unrecognized name for cluster: $name, line $line\n";
             }
         }
         elsif (lc($name) eq "maxnodesize") {
@@ -2447,7 +2448,7 @@ sub init() {
     # Print node count?
     $nodeCount = 1 if $opt{d};
 
-    # Ouput configuration?
+    # Output configuration?
     $label = 1;        # set by default
     $label = 0 if $opt{a};
 
@@ -2484,8 +2485,8 @@ sub usage() {
 
 Afterglow $version ---------------------------------------------------------------
 
-A program to visualize network activitiy data using graphs.
-Uses the dot graph layout program fromt the Graphviz suite.
+A program to visualize network activity data using graphs.
+Uses the dot graph layout program from the Graphviz suite.
 Input data is expected to be in this simple CSV-style format:
 
     [subject],  [predicate], [object]
@@ -2493,7 +2494,7 @@ Input data is expected to be in this simple CSV-style format:
 
 Usage:   afterglow.pl [-adhnstv] [-b lines] [-c conffile] [-e length] [-f threshold ] [-g threshold] [-l lines] [-o threshold] [-p mode] [-x color] [-m maxsize]
 
--a           : turn off labelelling of the output graph with the configuration used
+-a           : turn off labeling of the output graph with the configuration used
 -b lines     : number of lines to skip (e.g., 1 for header line)
 -c conffile  : color config file
 -d           : print node count
@@ -2524,10 +2525,9 @@ Usage:   afterglow.pl [-adhnstv] [-b lines] [-c conffile] [-e length] [-f thresh
 
 Example: cat somedata.csv | afterglow.pl -v | dot -Tgif -o somedata.gif
 
-The dot exectutable from the Graphviz suite can be obtained
+The dot executable from the Graphviz suite can be obtained
 from the AT&T research website: http://www.graphviz.org
 
 EOF
     exit;
 }
-
